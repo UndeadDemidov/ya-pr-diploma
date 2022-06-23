@@ -8,7 +8,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/auth"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/conf"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/handler"
 	midware "github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -23,15 +25,20 @@ type Server struct {
 func NewServer(cfg conf.Server) (srv *Server, err error) {
 	s := &Server{}
 	s.router = chi.NewRouter()
-	s.registerHandlers()
 	s.registerMiddlewares()
+	s.registerHandlers()
 	s.srv = &http.Server{Addr: cfg.RunAddress, Handler: s.router}
 	return s, nil
 }
 
 func (s *Server) registerHandlers() {
-	// app := handler.App{}
-	// s.router.Get(app.Handler)
+	app := handler.NewApp(auth.Credentials{})
+	// s.router.Route("/api", func(r chi.Router) {
+	// 	s.router.Route("/user", func(r chi.Router) {
+	// 		s.router.Post("/register", app.Auth.RegisterUser)
+	// 	})
+	// })
+	s.router.Post("/api/user/register", app.Auth.RegisterUser)
 }
 
 func (s *Server) registerMiddlewares() {

@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strings"
 
-	utils "github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/utils"
 )
 
 const (

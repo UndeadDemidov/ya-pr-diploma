@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/server"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/server"
 )
 
 func main() {

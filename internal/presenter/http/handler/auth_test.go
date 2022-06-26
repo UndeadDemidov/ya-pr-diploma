@@ -1,20 +1,25 @@
 package handler
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/handler/mocks"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/utils"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )
 
+var errDummy = errors.New("dummy error")
+
 func TestAuth_RegisterUser(t *testing.T) {
 	type fields struct {
-		ctrl        *gomock.Controller
-		mockManager *MockCredentialManager
+		auth *mock_handler.MockAuthenticator
 	}
 	type args struct {
 		request     string
@@ -30,8 +35,7 @@ func TestAuth_RegisterUser(t *testing.T) {
 			name: "status 200",
 			prepare: func(f *fields) {
 				gomock.InOrder(
-					f.mockManager.EXPECT().New(gomock.Any(), gomock.Any()).Return(NewMockCredentialValidator(f.ctrl), true),
-					f.mockManager.EXPECT().Add(gomock.Any()).Return(nil),
+					f.auth.EXPECT().SignIn(context.Background(), gomock.Any(), gomock.Any()).Return(nil),
 				)
 			},
 			args: args{
@@ -64,7 +68,7 @@ func TestAuth_RegisterUser(t *testing.T) {
 			name: "status 409",
 			prepare: func(f *fields) {
 				gomock.InOrder(
-					f.mockManager.EXPECT().New(gomock.Any(), gomock.Any()).Return(NewMockCredentialValidator(f.ctrl), false),
+					f.auth.EXPECT().SignIn(context.Background(), gomock.Any(), gomock.Any()).Return(errors2.ErrLoginIsInUseAlready),
 				)
 			},
 			args: args{
@@ -73,18 +77,29 @@ func TestAuth_RegisterUser(t *testing.T) {
 			},
 			want: http.StatusConflict,
 		},
+		{
+			name: "status 500",
+			prepare: func(f *fields) {
+				gomock.InOrder(
+					f.auth.EXPECT().SignIn(context.Background(), gomock.Any(), gomock.Any()).Return(errDummy),
+				)
+			},
+			args: args{
+				request:     `{"login": "test","password": "test"}`,
+				contentType: utils.ContentTypeJSON,
+			},
+			want: http.StatusInternalServerError,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
-			mockManager := NewMockCredentialManager(mockCtrl)
+			mockAuth := mock_handler.NewMockAuthenticator(mockCtrl)
 
 			f := fields{
-				ctrl:        mockCtrl,
-				mockManager: mockManager,
+				auth: mockAuth,
 			}
-
 			if tt.prepare != nil {
 				tt.prepare(&f)
 			}
@@ -94,7 +109,7 @@ func TestAuth_RegisterUser(t *testing.T) {
 			request.Header.Set(utils.ContentTypeKey, tt.args.contentType)
 			w := httptest.NewRecorder()
 
-			auth := NewAuth(mockManager)
+			auth := NewAuth(mockAuth)
 			auth.RegisterUser(w, request)
 			result := w.Result()
 			require.Equal(t, tt.want, result.StatusCode)

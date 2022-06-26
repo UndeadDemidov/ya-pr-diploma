@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/auth"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/conf"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/auth"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/handler"
 	midware "github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
 	"github.com/go-chi/chi/v5"
@@ -32,10 +32,10 @@ func NewServer(cfg conf.Server) (srv *Server, err error) {
 }
 
 func (s *Server) registerHandlers() {
-	app := handler.NewApp(auth.Credentials{})
+	app := handler.NewApp(auth.Service{})
 	// s.router.Route("/api", func(r chi.Router) {
 	// 	s.router.Route("/user", func(r chi.Router) {
-	// 		s.router.Post("/register", app.Auth.RegisterUser)
+	// 		s.router.Post("/register", app.Service.RegisterUser)
 	// 	})
 	// })
 	s.router.Post("/api/user/register", app.Auth.RegisterUser)
@@ -67,9 +67,9 @@ func (s *Server) Run() {
 	log.Info().Msg("Server stopped")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer func() {
-		// err := repo.Close()
-		// if err != nil {
-		// 	log.Error().Msgf("Caught an error due closing repository:%+v", err)
+		// errors := repo.Close()
+		// if errors != nil {
+		// 	log.Error().Msgf("Caught an error due closing repository:%+v", errors)
 		// }
 
 		log.Info().Msg("Everything is closed properly")

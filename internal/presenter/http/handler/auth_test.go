@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	mock_app "github.com/UndeadDemidov/ya-pr-diploma/internal/app/mocks"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/handler/mocks"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/utils"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -19,7 +19,7 @@ var errDummy = errors.New("dummy error")
 
 func TestAuth_RegisterUser(t *testing.T) {
 	type fields struct {
-		auth *mock_handler.MockAuthenticator
+		auth *mock_app.MockAuthenticator
 	}
 	type args struct {
 		request     string
@@ -95,7 +95,7 @@ func TestAuth_RegisterUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
-			mockAuth := mock_handler.NewMockAuthenticator(mockCtrl)
+			mockAuth := mock_app.NewMockAuthenticator(mockCtrl)
 
 			f := fields{
 				auth: mockAuth,

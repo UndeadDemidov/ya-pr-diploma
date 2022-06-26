@@ -1,17 +1,15 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/app"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/utils"
 )
-
-//go:generate mockgen -destination=./mocks/mock_auth.go . Authenticator
 
 var (
 	// ToDo - заменить на нормальные ответы в json!
@@ -19,16 +17,11 @@ var (
 	ErrProperJSONIsExpected = errors.New("proper JSON is expected, read task description carefully")
 )
 
-type Authenticator interface {
-	SignIn(ctx context.Context, user, pword string) error
-	Login(ctx context.Context, user, pword string) error
-}
-
 type Auth struct {
-	auth Authenticator
+	auth app.Authenticator
 }
 
-func NewAuth(auth Authenticator) *Auth {
+func NewAuth(auth app.Authenticator) *Auth {
 	return &Auth{auth: auth}
 }
 

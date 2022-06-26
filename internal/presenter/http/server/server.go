@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/app"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/conf"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/auth"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/handler"
@@ -18,27 +19,33 @@ import (
 )
 
 type Server struct {
+	mart   *app.GopherMart
 	srv    *http.Server
 	router *chi.Mux
 }
 
 func NewServer(cfg conf.Server) (srv *Server, err error) {
 	s := &Server{}
+	s.mart = app.NewGopherMart(auth.NewServiceWithDefaultCredMan())
+
 	s.router = chi.NewRouter()
 	s.registerMiddlewares()
 	s.registerHandlers()
-	s.srv = &http.Server{Addr: cfg.RunAddress, Handler: s.router}
+	s.srv = &http.Server{
+		Addr:    cfg.RunAddress,
+		Handler: s.router,
+	}
 	return s, nil
 }
 
 func (s *Server) registerHandlers() {
-	app := handler.NewApp(auth.NewServiceWithDefaultCredMan())
+	hApp := handler.NewApp(s.mart)
 	// s.router.Route("/api", func(r chi.Router) {
 	// 	s.router.Route("/user", func(r chi.Router) {
 	// 		s.router.Post("/register", app.Service.RegisterUser)
 	// 	})
 	// })
-	s.router.Post("/api/user/register", app.Auth.RegisterUser)
+	s.router.Post("/api/user/register", hApp.Auth.RegisterUser)
 }
 
 func (s *Server) registerMiddlewares() {

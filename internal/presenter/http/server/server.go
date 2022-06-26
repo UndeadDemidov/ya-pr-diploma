@@ -32,7 +32,7 @@ func NewServer(cfg conf.Server) (srv *Server, err error) {
 }
 
 func (s *Server) registerHandlers() {
-	app := handler.NewApp(auth.Service{})
+	app := handler.NewApp(auth.NewServiceWithDefaultCredMan())
 	// s.router.Route("/api", func(r chi.Router) {
 	// 	s.router.Route("/user", func(r chi.Router) {
 	// 		s.router.Post("/register", app.Service.RegisterUser)

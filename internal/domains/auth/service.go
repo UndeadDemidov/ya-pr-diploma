@@ -7,6 +7,8 @@ import (
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/handler"
 )
 
+//go:generate mockgen -destination=./mocks/mock_service.go . CredentialValidator,CredentialManager
+
 type CredentialValidator interface {
 	IsValid()
 }
@@ -21,6 +23,15 @@ type CredentialManager interface {
 var _ handler.Authenticator = (*Service)(nil)
 
 type Service struct {
+	credMan CredentialManager
+}
+
+func NewService(credMan CredentialManager) *Service {
+	return &Service{credMan: credMan}
+}
+
+func NewServiceWithDefaultCredMan() *Service {
+	return NewService(Credentials{})
 }
 
 func (s Service) SignIn(ctx context.Context, user, pword string) error {

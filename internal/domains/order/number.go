@@ -1,4 +1,4 @@
-package entity
+package order
 
 type Number int
 

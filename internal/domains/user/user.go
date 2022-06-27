@@ -7,6 +7,5 @@ type User struct {
 }
 
 func NewUser() User {
-	// ToDo сохранить в репозитории!
 	return User{ID: uuid.New().String()}
 }

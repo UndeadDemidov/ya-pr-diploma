@@ -27,14 +27,10 @@ func NewAuth(auth app.Authenticator) *Auth {
 
 // POST /api/user/register
 func (a Auth) RegisterUser(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get(utils.ContentTypeKey) != utils.ContentTypeJSON {
-		utils.ServerError(w, ErrInvalidContentType, http.StatusBadRequest)
-		return
-	}
 	req := authRequest{}
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err := req.Read(r)
 	if err != nil {
-		utils.ServerError(w, ErrProperJSONIsExpected, http.StatusBadRequest)
+		utils.ServerError(w, ErrInvalidContentType, http.StatusBadRequest)
 		return
 	}
 
@@ -50,6 +46,28 @@ func (a Auth) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// POST /api/user/login
+func (a Auth) LoginUser(w http.ResponseWriter, r *http.Request) {
+	req := authRequest{}
+	err := req.Read(r)
+	if err != nil {
+		utils.ServerError(w, ErrInvalidContentType, http.StatusBadRequest)
+		return
+	}
+
+	_, err = a.auth.Login(r.Context(), req.Login, req.Password)
+	if err != nil {
+		if errors.Is(err, errors2.ErrPairLoginPwordIsNotExist) {
+			utils.ServerError(w, errors2.ErrPairLoginPwordIsNotExist, http.StatusUnauthorized)
+			return
+		}
+		utils.InternalServerError(w, err)
+		return
+	}
+	// ToDo добавить сессию!
+	w.WriteHeader(http.StatusOK)
+}
+
 // {
 //	"login": "<login>",
 //	"password": "<password>"
@@ -57,4 +75,16 @@ func (a Auth) RegisterUser(w http.ResponseWriter, r *http.Request) {
 type authRequest struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
+}
+
+func (ar *authRequest) Read(r *http.Request) error {
+	if r.Header.Get(utils.ContentTypeKey) != utils.ContentTypeJSON {
+		return ErrInvalidContentType
+	}
+	err := json.NewDecoder(r.Body).Decode(ar)
+	if err != nil {
+		// ToDo wrapper?
+		return ErrProperJSONIsExpected
+	}
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
+	_ "github.com/golang/mock/mockgen/model"
 )
 
 //go:generate mockgen -destination=./mocks/mock_gophermart.go . Authenticator

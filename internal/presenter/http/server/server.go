@@ -66,6 +66,7 @@ func (s *Server) registerHandlers() {
 	// 	})
 	// })
 	s.router.Post("/api/user/register", hApp.Auth.RegisterUser)
+	s.router.Post("/api/user/login", hApp.Auth.LoginUser)
 }
 
 func (s *Server) registerMiddlewares() {

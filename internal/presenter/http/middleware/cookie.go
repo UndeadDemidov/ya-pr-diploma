@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	userIDCookie = "Gopher-martUserID"
+	userIDCookie = "GopherMartUserID"
 	secretKey    = "secret key" // Такие вещи выносятся в Vault.
 	saltStartIdx = 4
 	saltEndIdx   = 9

@@ -6,6 +6,7 @@ import (
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/app"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
+	_ "github.com/golang/mock/mockgen/model"
 )
 
 //go:generate mockgen -destination=./mocks/mock_service.go . CredentialManager
@@ -32,7 +33,7 @@ func NewService(userSvc user.Manager, credMan CredentialManager) *Service {
 }
 
 func NewServiceWithDefaultCredMan(repo Repository, userSvc user.Manager) *Service {
-	return NewService(userSvc, &Credentials{repo: repo})
+	return NewService(userSvc, NewManager(repo))
 }
 
 func (s Service) SignIn(ctx context.Context, login, pword string) error {
@@ -56,9 +57,5 @@ func (s Service) SignIn(ctx context.Context, login, pword string) error {
 }
 
 func (s Service) Login(ctx context.Context, login, pword string) (user user.User, err error) {
-	// найти пользователя,
-	// если не найден - то ошибка
-	// нужно ли найти пользователя или по сессии его надо находить?
-	// TODO implement me
-	panic("implement me")
+	return s.credMan.AuthenticateUser(ctx, login, pword)
 }

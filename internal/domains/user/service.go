@@ -2,7 +2,7 @@ package user
 
 import "context"
 
-type Manager interface {
+type Registerer interface {
 	RegisterNewUser(ctx context.Context, user User) error
 }
 
@@ -10,7 +10,7 @@ type Repository interface {
 	Create(ctx context.Context, user User) error
 }
 
-var _ Manager = (*Service)(nil)
+var _ Registerer = (*Service)(nil)
 
 type Service struct {
 	repo Repository

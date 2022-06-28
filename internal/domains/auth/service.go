@@ -21,18 +21,18 @@ type CredentialManager interface {
 var _ app.Authenticator = (*Service)(nil)
 
 type Service struct {
-	userSvc user.Manager
+	userSvc user.Registerer
 	credMan CredentialManager
 }
 
-func NewService(userSvc user.Manager, credMan CredentialManager) *Service {
+func NewService(userSvc user.Registerer, credMan CredentialManager) *Service {
 	return &Service{
 		userSvc: userSvc,
 		credMan: credMan,
 	}
 }
 
-func NewServiceWithDefaultCredMan(repo Repository, userSvc user.Manager) *Service {
+func NewServiceWithDefaultCredMan(repo Repository, userSvc user.Registerer) *Service {
 	return NewService(userSvc, NewManager(repo))
 }
 

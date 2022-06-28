@@ -7,9 +7,12 @@ import (
 	"hash"
 
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
+	_ "github.com/golang/mock/mockgen/model"
 )
 
 const salt = "gPhRmRt"
+
+//go:generate mockgen -destination=./mocks/mock_credentials.go . Repository
 
 type Repository interface {
 	Create(ctx context.Context, user user.User, login, pword string) error

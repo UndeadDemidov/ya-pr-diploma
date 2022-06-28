@@ -1,6 +1,12 @@
 package user
 
-import "context"
+import (
+	"context"
+
+	_ "github.com/golang/mock/mockgen/model"
+)
+
+//go:generate mockgen -destination=./mocks/mock_service.go . Registerer,Repository
 
 type Registerer interface {
 	RegisterNewUser(ctx context.Context, user User) error

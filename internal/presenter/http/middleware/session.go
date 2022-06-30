@@ -3,35 +3,38 @@ package middleware
 import (
 	"time"
 
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/app"
 	"github.com/google/uuid"
 )
 
 const sessionTTL = 120 * time.Second
 
-type Session struct {
-	userRef app.Referencer
+type Referencer interface {
+	Reference() string
+}
+
+type session struct {
+	userRef Referencer
 	expiry  time.Time
 }
 
-func NewSession(userRef app.Referencer, ttl time.Duration) Session {
+func newSession(userRef Referencer, ttl time.Duration) session {
 	if userRef == nil {
 		panic("missing app.Referencer, parameter must not be nil")
 	}
-	s := Session{userRef: userRef}
-	s.Refresh(ttl)
+	s := session{userRef: userRef}
+	s.refresh(ttl)
 	return s
 }
 
-func (s *Session) IsExpired() bool {
+func (s *session) isExpired() bool {
 	return s.expiry.Before(time.Now())
 }
 
-func (s *Session) Refresh(ttl time.Duration) {
+func (s *session) refresh(ttl time.Duration) {
 	s.expiry = time.Now().Add(ttl)
 }
 
-func (s *Session) GetReference() string {
+func (s *session) getReference() string {
 	return s.userRef.Reference()
 }
 
@@ -43,13 +46,13 @@ func NewSessionToken() SessionToken {
 
 type Sessions struct {
 	ttl   time.Duration
-	store map[SessionToken]Session
+	store map[SessionToken]session
 }
 
 func NewSessions(ttl time.Duration) *Sessions {
 	return &Sessions{
 		ttl:   ttl,
-		store: make(map[SessionToken]Session, 8),
+		store: make(map[SessionToken]session, 8),
 	}
 }
 
@@ -57,22 +60,22 @@ func NewDefaultSessions() *Sessions {
 	return NewSessions(sessionTTL)
 }
 
-func (s *Sessions) AddNewSession(userRef app.Referencer) SessionToken {
+func (s *Sessions) AddNewSession(userRef Referencer) SessionToken {
 	if userRef == nil {
 		panic("missing app.Referencer, parameter must not be nil")
 	}
 	token := NewSessionToken()
-	s.store[token] = NewSession(userRef, s.ttl)
+	s.store[token] = newSession(userRef, s.ttl)
 	return token
 }
 
 func (s *Sessions) IsExpired(token SessionToken) bool {
 	if session, ok := s.store[token]; ok {
-		if expired := session.IsExpired(); expired {
+		if expired := session.isExpired(); expired {
 			delete(s.store, token)
 			return true
 		}
-		session.Refresh(s.ttl)
+		session.refresh(s.ttl)
 		return false
 	}
 	return true

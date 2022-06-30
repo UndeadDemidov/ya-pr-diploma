@@ -38,7 +38,7 @@ func SessionsCookie(sessions *Sessions) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// получить из куки id сессии
-			token, err := GetSessionTokenFromCookie(sessionIDCookie, r)
+			token, err := getSessionTokenFromCookie(sessionIDCookie, r)
 			// если сессии нет - прерываем работу
 			if err != nil {
 				utils.ServerError(w, err, http.StatusUnauthorized)
@@ -50,14 +50,14 @@ func SessionsCookie(sessions *Sessions) func(next http.Handler) http.Handler {
 				utils.ServerError(w, errors2.ErrSessionIsExpired, http.StatusUnauthorized)
 				return
 			}
-			// если валидна - идем дальше
+			// если сессия валидна - записываем id пользователя в контекст
 			ctx := context.WithValue(r.Context(), ContextUserIDKey, sessions.GetReference(token))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-func GetSessionTokenFromCookie(name string, r *http.Request) (token SessionToken, err error) {
+func getSessionTokenFromCookie(name string, r *http.Request) (token SessionToken, err error) {
 	c, err := r.Cookie(name)
 	if err != nil {
 		return "", err

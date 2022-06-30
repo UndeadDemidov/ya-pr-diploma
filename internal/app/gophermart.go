@@ -24,7 +24,3 @@ func NewGopherMart(auth Authenticator) *GopherMart {
 	}
 	return &GopherMart{Authenticator: auth}
 }
-
-type Referencer interface {
-	Reference() string
-}

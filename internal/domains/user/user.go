@@ -1,8 +1,11 @@
 package user
 
 import (
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
 	"github.com/google/uuid"
 )
+
+var _ middleware.Referencer = (*User)(nil)
 
 type User struct {
 	ID string

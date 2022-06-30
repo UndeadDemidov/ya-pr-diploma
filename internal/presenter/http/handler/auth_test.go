@@ -11,6 +11,7 @@ import (
 	mock_app "github.com/UndeadDemidov/ya-pr-diploma/internal/app/mocks"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
+	midware "github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/utils"
 	"github.com/golang/mock/gomock"
 	"github.com/rs/zerolog"
@@ -122,7 +123,7 @@ func TestAuth_RegisterUser(t *testing.T) {
 			request.Header.Set(utils.ContentTypeKey, tt.args.contentType)
 			w := httptest.NewRecorder()
 
-			auth := NewAuth(mockAuth)
+			auth := NewAuth(mockAuth, midware.NewDefaultSessions())
 			auth.RegisterUser(w, request)
 			result := w.Result()
 			require.Equal(t, tt.want, result.StatusCode)
@@ -233,7 +234,7 @@ func TestAuth_LoginUser(t *testing.T) {
 			request.Header.Set(utils.ContentTypeKey, tt.args.contentType)
 			w := httptest.NewRecorder()
 
-			auth := NewAuth(mockAuth)
+			auth := NewAuth(mockAuth, midware.NewDefaultSessions())
 			auth.LoginUser(w, request)
 			result := w.Result()
 			require.Equal(t, tt.want, result.StatusCode)

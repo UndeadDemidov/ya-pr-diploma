@@ -31,6 +31,9 @@ type Manager struct {
 }
 
 func NewManager(repo Repository) *Manager {
+	if repo == nil {
+		panic("missing Repository, parameter must not be nil")
+	}
 	return &Manager{repo: repo, hasher: NewSaltedHashWithDefaultMixer(sha256.New(), []byte(salt))}
 }
 

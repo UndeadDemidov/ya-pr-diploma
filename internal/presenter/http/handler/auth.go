@@ -8,6 +8,7 @@ import (
 
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/app"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/utils"
 )
 
@@ -18,11 +19,18 @@ var (
 )
 
 type Auth struct {
-	auth app.Authenticator
+	auth     app.Authenticator
+	sessions *middleware.Sessions
 }
 
-func NewAuth(auth app.Authenticator) *Auth {
-	return &Auth{auth: auth}
+func NewAuth(auth app.Authenticator, sessions *middleware.Sessions) *Auth {
+	if auth == nil {
+		panic("missing app.Authenticator, parameter must not be nil")
+	}
+	if sessions == nil {
+		panic("missing *middleware.Sessions, parameter must not be nil")
+	}
+	return &Auth{auth: auth, sessions: sessions}
 }
 
 // POST /api/user/register
@@ -55,7 +63,7 @@ func (a Auth) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = a.auth.Login(r.Context(), req.Login, req.Password)
+	usr, err := a.auth.Login(r.Context(), req.Login, req.Password)
 	if err != nil {
 		if errors.Is(err, errors2.ErrPairLoginPwordIsNotExist) {
 			utils.ServerError(w, errors2.ErrPairLoginPwordIsNotExist, http.StatusUnauthorized)
@@ -65,6 +73,7 @@ func (a Auth) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// ToDo добавить сессию!
+	a.sessions.AddNewSession(usr)
 	w.WriteHeader(http.StatusOK)
 }
 

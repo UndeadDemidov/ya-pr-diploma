@@ -19,5 +19,12 @@ type GopherMart struct {
 }
 
 func NewGopherMart(auth Authenticator) *GopherMart {
+	if auth == nil {
+		panic("missing Authenticator, parameter must not be nil")
+	}
 	return &GopherMart{Authenticator: auth}
+}
+
+type Referencer interface {
+	Reference() string
 }

@@ -2,13 +2,15 @@ package postgre
 
 import (
 	"context"
-	"errors"
 
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/auth"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/lib/pq"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -24,12 +26,19 @@ type Auth struct {
 var _ auth.Repository = (*Auth)(nil)
 
 func NewAuth(db *pgxpool.Pool) *Auth {
+	if db == nil {
+		panic("missing *pgxpool.Pool, parameter must not be nil")
+	}
 	return &Auth{db: db}
 }
 
 func (a Auth) Create(ctx context.Context, usr user.User, login, pword string) error {
 	_, err := a.db.Exec(ctx, insertCredentials, usr.ID, login, pword)
 	if err != nil {
+		var pgErr pq.Error
+		if errors.As(err, &pgErr); pgErr.Code == pgerrcode.UniqueViolation {
+			return errors2.ErrLoginIsInUseAlready
+		}
 		return err
 	}
 	return nil

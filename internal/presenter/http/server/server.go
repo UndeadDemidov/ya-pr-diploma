@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,15 +22,16 @@ import (
 )
 
 type Server struct {
-	dbPool *pgxpool.Pool
-	mart   *app.GopherMart
-	srv    *http.Server
-	router *chi.Mux
+	dbPool   *pgxpool.Pool
+	mart     *app.GopherMart
+	srv      *http.Server
+	router   *chi.Mux
+	sessions *midware.Sessions
 }
 
 func NewServer(cfg *conf.App) (srv *Server, err error) {
 	if cfg == nil {
-		return nil, errors.New("conf.App is nil")
+		panic("missing *conf.App, parameter must not be nil")
 	}
 	s := &Server{}
 	ctx := context.Background()
@@ -47,8 +47,10 @@ func NewServer(cfg *conf.App) (srv *Server, err error) {
 	// ToDo конфигуратор?
 	a := auth.NewServiceWithDefaultCredMan(repo.Auth, user.NewService(repo.User))
 	s.mart = app.NewGopherMart(a)
+	s.sessions = midware.NewDefaultSessions()
 
 	s.router = chi.NewRouter()
+	// ToDo два вида роутеров! один вид для auth, другое для всего остального!
 	s.registerMiddlewares()
 	s.registerHandlers()
 	s.srv = &http.Server{
@@ -59,7 +61,7 @@ func NewServer(cfg *conf.App) (srv *Server, err error) {
 }
 
 func (s *Server) registerHandlers() {
-	hApp := handler.NewApp(s.mart)
+	hApp := handler.NewApp(s.mart, s.sessions)
 	// s.router.Route("/api", func(r chi.Router) {
 	// 	s.router.Route("/user", func(r chi.Router) {
 	// 		s.router.Post("/register", app.Service.RegisterUser)
@@ -75,8 +77,8 @@ func (s *Server) registerMiddlewares() {
 	s.router.Use(middleware.Logger)
 	s.router.Use(middleware.Recoverer)
 	s.router.Use(middleware.Compress(5))
-	// r.Use(midware.Decompress)
-	s.router.Use(midware.UserCookie)
+	s.router.Use(midware.Decompress)
+	s.router.Use(midware.SessionsCookie(s.sessions))
 }
 
 func (s *Server) Run() {

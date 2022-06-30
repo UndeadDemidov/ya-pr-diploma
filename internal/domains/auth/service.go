@@ -26,6 +26,12 @@ type Service struct {
 }
 
 func NewService(userSvc user.Registerer, credMan CredentialManager) *Service {
+	if userSvc == nil {
+		panic("missing user.Registerer, parameter must not be nil")
+	}
+	if credMan == nil {
+		panic("missing CredentialManager, parameter must not be nil")
+	}
 	return &Service{
 		userSvc: userSvc,
 		credMan: credMan,
@@ -33,6 +39,12 @@ func NewService(userSvc user.Registerer, credMan CredentialManager) *Service {
 }
 
 func NewServiceWithDefaultCredMan(repo Repository, userSvc user.Registerer) *Service {
+	if repo == nil {
+		panic("missing Repository, parameter must not be nil")
+	}
+	if userSvc == nil {
+		panic("missing user.Registerer, parameter must not be nil")
+	}
 	return NewService(userSvc, NewManager(repo))
 }
 

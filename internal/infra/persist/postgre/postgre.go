@@ -12,6 +12,9 @@ type Persist struct {
 }
 
 func NewPersist(ctx context.Context, db *pgxpool.Pool) (*Persist, error) {
+	if db == nil {
+		panic("missing *pgxpool.Pool, parameter must not be nil")
+	}
 	err := db.Ping(ctx)
 	if err != nil {
 		return nil, err

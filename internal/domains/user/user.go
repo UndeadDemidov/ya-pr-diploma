@@ -1,6 +1,8 @@
 package user
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type User struct {
 	ID string
@@ -8,4 +10,8 @@ type User struct {
 
 func NewUser() User {
 	return User{ID: uuid.New().String()}
+}
+
+func (u User) Reference() string {
+	return u.ID
 }

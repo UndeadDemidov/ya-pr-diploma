@@ -23,6 +23,9 @@ type Service struct {
 }
 
 func NewService(repo Repository) *Service {
+	if repo == nil {
+		panic("missing Repository, parameter must not be nil")
+	}
 	return &Service{repo: repo}
 }
 

@@ -10,71 +10,65 @@ import (
 	"net/http"
 	"strings"
 
+	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/utils"
 )
 
 const (
-	userIDCookie = "GopherMartUserID"
-	secretKey    = "secret key" // Такие вещи выносятся в Vault.
-	saltStartIdx = 4
-	saltEndIdx   = 9
-	maxAge       = 60 * 60 * 24 * 180
+	sessionIDCookie = "GopherMartSessionID"
+	salt            = "secret key" // Можно использовать IP или еще что-то присущее конкретному пользователю/машине
+	saltStartIdx    = 4
+	saltEndIdx      = 9
+	maxAge          = 60 * 60 * 24 * 180
 )
 
 var (
 	ErrSignedCookieInvalidValueOrUnsigned = errors.New("invalid cookie value or it is unsigned")
 	ErrSignedCookieInvalidSign            = errors.New("invalid sign")
 	ErrSignedCookieSaltNotSetProperly     = errors.New("SaltStartIdx and SaltEndIdx must be set properly")
-	ContextUserIDKey                      = LocalContext(userIDCookie)
+	ContextUserIDKey                      = LocalContext(sessionIDCookie)
 )
 
 type LocalContext string
 
-func UserCookie(next http.Handler) http.Handler {
-	middleware := func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		user, err := getUserID(r)
-		if err != nil {
-			utils.InternalServerError(w, err)
-		}
-		ctx = context.WithValue(ctx, ContextUserIDKey, user)
-		next.ServeHTTP(w, r.WithContext(ctx))
+func SessionsCookie(sessions *Sessions) func(next http.Handler) http.Handler {
+	if sessions == nil {
+		panic("missing *Sessions, parameter must not be nil")
 	}
-	return http.HandlerFunc(middleware)
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// получить из куки id сессии
+			token, err := GetSessionTokenFromCookie(sessionIDCookie, r)
+			// если сессии нет - прерываем работу
+			if err != nil {
+				utils.ServerError(w, err, http.StatusUnauthorized)
+				return
+			}
+			// если сессия есть - проверяем валидность
+			// если не валидна - прерываем работу
+			if sessions.IsExpired(token) {
+				utils.ServerError(w, errors2.ErrSessionIsExpired, http.StatusUnauthorized)
+				return
+			}
+			// если валидна - идем дальше
+			ctx := context.WithValue(r.Context(), ContextUserIDKey, sessions.GetReference(token))
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
 
-func getUserID(r *http.Request) (userID string, err error) {
-	// получить куку пользователя
-	c, err := r.Cookie(userIDCookie)
-	// куки нет
-	if errors.Is(err, http.ErrNoCookie) {
-		return "", nil
-	}
+func GetSessionTokenFromCookie(name string, r *http.Request) (token SessionToken, err error) {
+	c, err := r.Cookie(name)
 	if err != nil {
 		return "", err
 	}
-	// кука есть
-	cookie := NewUserIDSignedCookie("")
+	cookie := NewSessionSignedCookie("")
 	cookie.Cookie = c
 	err = cookie.DetachSign()
-	switch {
-	case err == nil: // кука подписана верно
-		return cookie.BaseValue, nil
-	case errors.Is(err, ErrSignedCookieInvalidSign): // кука подписана неверно
-		return "", nil
+	if err != nil {
+		return "", err
 	}
-	return "", err
-}
-
-// GetUserID возвращает сохраненный в контексте куку userIDCookie
-func GetUserID(ctx context.Context) string {
-	if ctx == nil {
-		return ""
-	}
-	if userID, ok := ctx.Value(ContextUserIDKey).(string); ok {
-		return userID
-	}
-	return ""
+	return SessionToken(cookie.BaseValue), nil
 }
 
 type SignedCookie struct {
@@ -86,12 +80,16 @@ type SignedCookie struct {
 	BaseValue    string
 }
 
-func NewUserIDSignedCookie(usedID string) (sc SignedCookie) {
+func NewSessionSignedCookie(val SessionToken) (sc SignedCookie) {
+	return NewSignedCookie("/", sessionIDCookie, string(val), maxAge, saltStartIdx, saltEndIdx)
+}
+
+func NewSignedCookie(path, name, val string, maxAge int, saltStartIdx, saltEndIdx uint) (sc SignedCookie) {
 	sc = SignedCookie{
 		Cookie: &http.Cookie{
-			Path:   "/",
-			Name:   userIDCookie,
-			Value:  usedID,
+			Path:   path,
+			Name:   name,
+			Value:  val,
 			MaxAge: maxAge,
 		},
 		SaltStartIdx: saltStartIdx,
@@ -123,7 +121,7 @@ func (sc *SignedCookie) RecalcKey() {
 		panic(ErrSignedCookieSaltNotSetProperly)
 	}
 
-	var key = []byte(secretKey)
+	var key = []byte(salt)
 	key = append(key, []byte(sc.BaseValue)[sc.SaltStartIdx:sc.SaltEndIdx]...)
 	sc.key = key
 }

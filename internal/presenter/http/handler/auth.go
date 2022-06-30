@@ -72,7 +72,6 @@ func (a Auth) LoginUser(w http.ResponseWriter, r *http.Request) {
 		utils.InternalServerError(w, err)
 		return
 	}
-	// ToDo добавить сессию!
 	a.sessions.AddNewSession(usr)
 	w.WriteHeader(http.StatusOK)
 }

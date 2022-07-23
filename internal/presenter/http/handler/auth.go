@@ -72,7 +72,8 @@ func (a Auth) LoginUser(w http.ResponseWriter, r *http.Request) {
 		utils.InternalServerError(w, err)
 		return
 	}
-	a.sessions.AddNewSession(usr)
+	cookie := middleware.NewSessionSignedCookie(a.sessions.AddNewSession(usr))
+	cookie.Set(w)
 	w.WriteHeader(http.StatusOK)
 }
 

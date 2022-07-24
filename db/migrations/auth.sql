@@ -2,14 +2,15 @@ DROP TABLE auth;
 
 CREATE TABLE auth
 (
-    id       UUID DEFAULT gen_random_uuid() NOT NULL
+    id         UUID        DEFAULT gen_random_uuid() NOT NULL
         CONSTRAINT auth_pk
             PRIMARY KEY,
-    user_id  uuid                           NOT NULL
+    user_id    uuid                                  NOT NULL
         CONSTRAINT auth_users_id_fk
             REFERENCES users,
-    login    VARCHAR                        NOT NULL,
-    password VARCHAR                        NOT NULL
+    login      VARCHAR                               NOT NULL,
+    password   VARCHAR                               NOT NULL,
+    created_at timestamptz DEFAULT NOW()             NOT NULL
 );
 
 CREATE UNIQUE INDEX auth_login_uindex

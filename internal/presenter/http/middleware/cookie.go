@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	sessionIDCookie = "GopherMartSessionID"
+	SessionIDCookie = "GopherMartSessionID"
 	salt            = "secret key" // Можно использовать IP или еще что-то присущее конкретному пользователю/машине
 	saltStartIdx    = 4
 	saltEndIdx      = 9
@@ -26,7 +26,7 @@ var (
 	ErrSignedCookieInvalidValueOrUnsigned = errors.New("invalid cookie value or it is unsigned")
 	ErrSignedCookieInvalidSign            = errors.New("invalid sign")
 	ErrSignedCookieSaltNotSetProperly     = errors.New("SaltStartIdx and SaltEndIdx must be set properly")
-	ContextUserIDKey                      = LocalContext(sessionIDCookie)
+	ContextUserIDKey                      = LocalContext(SessionIDCookie)
 )
 
 type LocalContext string
@@ -38,7 +38,7 @@ func SessionsCookie(sessions *Sessions) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// получить из куки id сессии
-			token, err := getSessionTokenFromCookie(sessionIDCookie, r)
+			token, err := getSessionTokenFromCookie(SessionIDCookie, r)
 			// если сессии нет - прерываем работу
 			if err != nil {
 				utils.ServerError(w, err, http.StatusUnauthorized)
@@ -50,7 +50,7 @@ func SessionsCookie(sessions *Sessions) func(next http.Handler) http.Handler {
 				utils.ServerError(w, errors2.ErrSessionIsExpired, http.StatusUnauthorized)
 				return
 			}
-			// если сессия валидна - записываем id пользователя в контекст
+			// если сессия валидна - ID пользователя в контекст
 			ctx := context.WithValue(r.Context(), ContextUserIDKey, sessions.GetReference(token))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -81,7 +81,7 @@ type SignedCookie struct {
 }
 
 func NewSessionSignedCookie(val SessionToken) (sc SignedCookie) {
-	return NewSignedCookie("/", sessionIDCookie, string(val), maxAge, saltStartIdx, saltEndIdx)
+	return NewSignedCookie("/", SessionIDCookie, string(val), maxAge, saltStartIdx, saltEndIdx)
 }
 
 func NewSignedCookie(path, name, val string, maxAge int, saltStartIdx, saltEndIdx uint) (sc SignedCookie) {

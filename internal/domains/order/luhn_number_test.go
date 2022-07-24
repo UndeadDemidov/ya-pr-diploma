@@ -5,7 +5,7 @@ import "testing"
 func TestNumber_Valid(t *testing.T) {
 	tests := []struct {
 		name string
-		num  Number
+		num  LuhnNumber
 		want bool
 	}{
 		{
@@ -61,8 +61,8 @@ func TestNumber_Valid(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.num.Valid(); got != tt.want {
-				t.Errorf("Valid() = %v, want %v", got, tt.want)
+			if got := tt.num.IsValid(); got != tt.want {
+				t.Errorf("IsValid() = %v, want %v", got, tt.want)
 			}
 		})
 	}

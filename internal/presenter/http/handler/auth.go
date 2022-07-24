@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/app"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/utils"
@@ -34,7 +36,7 @@ func NewAuth(auth app.Authenticator, sessions *middleware.Sessions) *Auth {
 }
 
 // POST /api/user/register
-func (a Auth) RegisterUser(w http.ResponseWriter, r *http.Request) {
+func (a *Auth) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	req := authRequest{}
 	err := req.Read(r)
 	if err != nil {
@@ -55,7 +57,7 @@ func (a Auth) RegisterUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /api/user/login
-func (a Auth) LoginUser(w http.ResponseWriter, r *http.Request) {
+func (a *Auth) LoginUser(w http.ResponseWriter, r *http.Request) {
 	req := authRequest{}
 	err := req.Read(r)
 	if err != nil {
@@ -72,6 +74,8 @@ func (a Auth) LoginUser(w http.ResponseWriter, r *http.Request) {
 		utils.InternalServerError(w, err)
 		return
 	}
+	// Можно было и JWT поюзать, но решил для практики поизобретать велосипеды в отпуске,
+	// чтобы не обнулиться в дно за месяц академа
 	cookie := middleware.NewSessionSignedCookie(a.sessions.AddNewSession(usr))
 	cookie.Set(w)
 	w.WriteHeader(http.StatusOK)
@@ -96,4 +100,15 @@ func (ar *authRequest) Read(r *http.Request) error {
 		return ErrProperJSONIsExpected
 	}
 	return nil
+}
+
+// GetUserFromContext возвращает сохраненного в контексте пользователя
+func GetUserFromContext(ctx context.Context) user.User {
+	if ctx == nil {
+		return user.User{}
+	}
+	if userID, ok := ctx.Value(middleware.ContextUserIDKey).(string); ok {
+		return user.User{ID: userID}
+	}
+	return user.User{}
 }

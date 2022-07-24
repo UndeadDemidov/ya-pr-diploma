@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	mock_app "github.com/UndeadDemidov/ya-pr-diploma/internal/app/mocks"
+	mock "github.com/UndeadDemidov/ya-pr-diploma/internal/app/mocks"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	midware "github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
@@ -22,7 +22,7 @@ var errDummy = errors.New("dummy error")
 
 func TestAuth_RegisterUser(t *testing.T) {
 	type fields struct {
-		auth *mock_app.MockAuthenticator
+		auth *mock.MockAuthenticator
 	}
 	type args struct {
 		request     string
@@ -109,7 +109,7 @@ func TestAuth_RegisterUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
-			mockAuth := mock_app.NewMockAuthenticator(mockCtrl)
+			mockAuth := mock.NewMockAuthenticator(mockCtrl)
 
 			f := fields{
 				auth: mockAuth,
@@ -133,7 +133,7 @@ func TestAuth_RegisterUser(t *testing.T) {
 
 func TestAuth_LoginUser(t *testing.T) {
 	type fields struct {
-		auth *mock_app.MockAuthenticator
+		auth *mock.MockAuthenticator
 	}
 	type args struct {
 		request     string
@@ -220,7 +220,7 @@ func TestAuth_LoginUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
-			mockAuth := mock_app.NewMockAuthenticator(mockCtrl)
+			mockAuth := mock.NewMockAuthenticator(mockCtrl)
 
 			f := fields{
 				auth: mockAuth,

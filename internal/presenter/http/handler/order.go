@@ -59,14 +59,14 @@ func (o *Order) UploadOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = o.processor.Add(r.Context(), usr, string(b))
-	switch err {
-	case errors2.ErrOrderAlreadyUploaded:
+	switch {
+	case errors.Is(err, errors2.ErrOrderAlreadyUploaded):
 		w.WriteHeader(http.StatusOK)
 		return
-	case errors2.ErrOrderAlreadyUploadedByAnotherUser:
+	case errors.Is(err, errors2.ErrOrderAlreadyUploadedByAnotherUser):
 		utils.ServerError(w, err, http.StatusConflict)
 		return
-	case errors2.ErrOrderInvalidNumberFormat:
+	case errors.Is(err, errors2.ErrOrderInvalidNumberFormat):
 		utils.ServerError(w, err, http.StatusUnprocessableEntity)
 		return
 	}

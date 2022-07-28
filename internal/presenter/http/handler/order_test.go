@@ -220,7 +220,7 @@ func TestOrder_DownloadOrders(t *testing.T) {
 			want: http.StatusNoContent,
 		},
 		{
-			name: "empty result",
+			name: "set of valid results",
 			prepare: func(f *fields) {
 				gomock.InOrder(
 					f.processor.EXPECT().List(gomock.Any(), gomock.Any()).Return(f.orders, nil),

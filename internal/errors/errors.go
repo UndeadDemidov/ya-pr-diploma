@@ -20,3 +20,8 @@ var (
 	ErrOrderAlreadyUploadedByAnotherUser = errors.New("order is already uploaded by another user")
 	ErrOrderInvalidNumberFormat          = errors.New("invalid order number format")
 )
+
+// Withdrawal errors
+var (
+	ErrWithdrawalNotEnoughFund = errors.New("you have not enough fund to withdraw")
+)

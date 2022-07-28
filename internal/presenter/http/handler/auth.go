@@ -35,6 +35,7 @@ func NewAuth(auth app.Authenticator, sessions *middleware.Sessions) *Auth {
 	return &Auth{auth: auth, sessions: sessions}
 }
 
+// RegisterUser
 // POST /api/user/register
 func (a *Auth) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	req := authRequest{}
@@ -56,6 +57,7 @@ func (a *Auth) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// LoginUser
 // POST /api/user/login
 func (a *Auth) LoginUser(w http.ResponseWriter, r *http.Request) {
 	req := authRequest{}

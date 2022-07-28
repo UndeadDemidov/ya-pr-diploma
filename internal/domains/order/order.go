@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 )
 
 type ProcessingStatus int
 
-var _ fmt.Stringer = (*ProcessingStatus)(nil)
+var (
+	_ fmt.Stringer   = (*ProcessingStatus)(nil)
+	_ json.Marshaler = (*ProcessingStatus)(nil)
+)
 
 const (
 	New ProcessingStatus = iota
@@ -40,14 +44,16 @@ func (s ProcessingStatus) IsValid() bool {
 	return false
 }
 
+// Order
+// Вообще-то это по смыслу не фига не заказ, а бонус за заказ! А баланс - это совокупность бонусов и списаний.
 type Order struct {
-	ID        string           `json:"-"`
-	User      user.User        `json:"-"`
-	Number    LuhnNumber       `json:"number,string"`
-	Status    ProcessingStatus `json:"status,string"`
-	Accrual   int64            `json:"accrual,omitempty"`
-	Unloaded  time.Time        `json:"uploaded_at"`
-	Processed time.Time        `json:"-"`
+	ID        string            `json:"-"`
+	User      user.User         `json:"-"`
+	Number    primit.LuhnNumber `json:"number,string"`
+	Status    ProcessingStatus  `json:"status,string"`
+	Accrual   int64             `json:"accrual,omitempty"`
+	Unloaded  time.Time         `json:"uploaded_at"`
+	Processed time.Time         `json:"-"`
 }
 
 func (o *Order) MarshalJSON() ([]byte, error) {

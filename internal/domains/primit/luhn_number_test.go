@@ -1,4 +1,4 @@
-package order
+package primit
 
 import "testing"
 

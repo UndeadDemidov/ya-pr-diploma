@@ -51,7 +51,7 @@ type Order struct {
 	User      user.User         `json:"-"`
 	Number    primit.LuhnNumber `json:"number,string"`
 	Status    ProcessingStatus  `json:"status,string"`
-	Accrual   int64             `json:"accrual,omitempty"`
+	Accrual   primit.Currency   `json:"accrual,omitempty"`
 	Unloaded  time.Time         `json:"uploaded_at"`
 	Processed time.Time         `json:"-"`
 }

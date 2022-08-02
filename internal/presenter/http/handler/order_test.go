@@ -233,7 +233,7 @@ func TestOrder_DownloadOrders(t *testing.T) {
 						User:      user.User{ID: "1"},
 						Number:    9278923470,
 						Status:    order.Processed,
-						Accrual:   500,
+						Accrual:   50000,
 						Unloaded:  utils.TimeRFC3339ParseHelper("2020-12-10T15:15:45+03:00"),
 						Processed: time.Now(),
 					},

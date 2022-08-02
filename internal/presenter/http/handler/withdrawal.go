@@ -22,12 +22,12 @@ func NewWithdrawal(processor app.WithdrawalProcessor) *Withdrawal {
 	return &Withdrawal{processor: processor}
 }
 
-// Register
+// CashOut
 // 200 — успешная обработка запроса;
 // 402 — на счету недостаточно средств;
 // 422 — неверный номер заказа;
 // 500 — внутренняя ошибка сервера.
-func (wd Withdrawal) Register(w http.ResponseWriter, r *http.Request) {
+func (wd Withdrawal) CashOut(w http.ResponseWriter, r *http.Request) {
 	if r.ContentLength == 0 {
 		utils.ServerError(w, ErrProperJSONIsExpected, http.StatusBadRequest)
 		return
@@ -65,6 +65,35 @@ func (wd Withdrawal) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+// History
+// 200 — успешная обработка запроса.
+// 204 — нет данных для ответа.
+// 500 — внутренняя ошибка сервера.
+func (wd Withdrawal) History(w http.ResponseWriter, r *http.Request) {
+	usr := GetUserFromContext(r.Context())
+	if usr.ID == "" {
+		utils.InternalServerError(w, errors2.ErrSessionUserCanNotBeDefined)
+		return
+	}
+	list, err := wd.processor.List(r.Context(), usr)
+	if err != nil {
+		utils.InternalServerError(w, err)
+		return
+	}
+	if len(list) == 0 {
+		utils.ServerError(w, ErrNoContentToReturn, http.StatusNoContent)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	// ToDo было бы не плохо вставить адаптер из list в response
+	err = json.NewEncoder(w).Encode(list)
+	if err != nil {
+		utils.InternalServerError(w, err)
+		return
+	}
 }
 
 // {

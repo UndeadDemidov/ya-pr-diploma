@@ -1,10 +1,9 @@
-package balance
+package entity
 
 import (
 	"encoding/json"
 	"time"
 
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 )
@@ -21,7 +20,7 @@ var _ json.Marshaler = (*Withdrawal)(nil)
 type Withdrawal struct {
 	ID        string          `json:"-"`
 	User      user.User       `json:"-"`
-	Order     order.Order     `json:"order"`
+	Order     Order           `json:"order"`
 	Sum       primit.Currency `json:"sum"`
 	Processed time.Time       `json:"processed_at"`
 }

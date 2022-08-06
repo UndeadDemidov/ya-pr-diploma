@@ -10,8 +10,7 @@ import (
 	"time"
 
 	mock "github.com/UndeadDemidov/ya-pr-diploma/internal/app/mocks"
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/balance"
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
@@ -166,11 +165,11 @@ func TestWithdrawal_CashOut(t *testing.T) {
 
 func TestWithdrawal_History(t *testing.T) {
 	type fields struct {
-		wtdrwls   []balance.Withdrawal
+		wtdrwls   []entity.Withdrawal
 		processor *mock.MockWithdrawalProcessor
 	}
 	type args struct {
-		wtdrwls   []balance.Withdrawal
+		wtdrwls   []entity.Withdrawal
 		json      string
 		reference string
 	}
@@ -212,7 +211,7 @@ func TestWithdrawal_History(t *testing.T) {
 				)
 			},
 			args: args{
-				wtdrwls:   make([]balance.Withdrawal, 0),
+				wtdrwls:   make([]entity.Withdrawal, 0),
 				json:      "",
 				reference: "1",
 			},
@@ -226,15 +225,15 @@ func TestWithdrawal_History(t *testing.T) {
 				)
 			},
 			args: args{
-				wtdrwls: []balance.Withdrawal{
+				wtdrwls: []entity.Withdrawal{
 					{
 						ID:   "1",
 						User: user.User{ID: "1"},
-						Order: order.Order{
+						Order: entity.Order{
 							ID:        "1",
 							User:      user.User{ID: "1"},
 							Number:    2377225624,
-							Status:    order.Processed,
+							Status:    entity.Processed,
 							Accrual:   200,
 							Unloaded:  time.Time{},
 							Processed: time.Time{},

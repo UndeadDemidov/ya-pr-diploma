@@ -27,7 +27,7 @@ func (c Currency) String() string {
 	return fmt.Sprintf("%.2f", c.Float64())
 }
 
-func (c *Currency) MarshalJSON() ([]byte, error) {
+func (c Currency) MarshalJSON() ([]byte, error) {
 	return []byte(c.String()), nil
 }
 

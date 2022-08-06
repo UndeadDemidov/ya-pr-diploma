@@ -10,7 +10,7 @@ import (
 	"time"
 
 	mock "github.com/UndeadDemidov/ya-pr-diploma/internal/app/mocks"
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
@@ -167,11 +167,11 @@ func TestOrder_UploadOrder(t *testing.T) {
 
 func TestOrder_DownloadOrders(t *testing.T) {
 	type fields struct {
-		orders    []order.Order
+		orders    []entity.Order
 		processor *mock.MockOrderProcessor
 	}
 	type args struct {
-		orders    []order.Order
+		orders    []entity.Order
 		json      string
 		reference string
 	}
@@ -213,7 +213,7 @@ func TestOrder_DownloadOrders(t *testing.T) {
 				)
 			},
 			args: args{
-				orders:    make([]order.Order, 0),
+				orders:    make([]entity.Order, 0),
 				json:      "",
 				reference: "1",
 			},
@@ -227,12 +227,12 @@ func TestOrder_DownloadOrders(t *testing.T) {
 				)
 			},
 			args: args{
-				orders: []order.Order{
+				orders: []entity.Order{
 					{
 						ID:        "1",
 						User:      user.User{ID: "1"},
 						Number:    9278923470,
-						Status:    order.Processed,
+						Status:    entity.Processed,
 						Accrual:   50000,
 						Unloaded:  utils.TimeRFC3339ParseHelper("2020-12-10T15:15:45+03:00"),
 						Processed: time.Now(),
@@ -241,7 +241,7 @@ func TestOrder_DownloadOrders(t *testing.T) {
 						ID:        "1",
 						User:      user.User{ID: "1"},
 						Number:    12345678903,
-						Status:    order.Processing,
+						Status:    entity.Processing,
 						Accrual:   0,
 						Unloaded:  utils.TimeRFC3339ParseHelper("2020-12-10T15:12:01+03:00"),
 						Processed: time.Now(),
@@ -250,7 +250,7 @@ func TestOrder_DownloadOrders(t *testing.T) {
 						ID:        "1",
 						User:      user.User{ID: "1"},
 						Number:    346436439,
-						Status:    order.Invalid,
+						Status:    entity.Invalid,
 						Accrual:   0,
 						Unloaded:  utils.TimeRFC3339ParseHelper("2020-12-09T16:09:53+03:00"),
 						Processed: time.Now(),

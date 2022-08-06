@@ -1,5 +1,3 @@
-DROP TABLE users;
-
 CREATE TABLE users
 (
     id         UUID                      NOT NULL

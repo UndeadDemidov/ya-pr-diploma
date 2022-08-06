@@ -3,8 +3,7 @@ package app
 import (
 	"context"
 
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/balance"
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	_ "github.com/golang/mock/mockgen/model"
@@ -19,16 +18,16 @@ type Authenticator interface {
 
 type OrderProcessor interface {
 	Add(ctx context.Context, usr user.User, num string) error
-	List(ctx context.Context, usr user.User) (ords []order.Order, err error)
+	List(ctx context.Context, usr user.User) (ords []entity.Order, err error)
 }
 
 type BalanceGetter interface {
-	Get(ctx context.Context, usr user.User) (bal balance.Balance, err error)
+	Get(ctx context.Context, usr user.User) (bal entity.Balance, err error)
 }
 
 type WithdrawalProcessor interface {
 	Add(ctx context.Context, usr user.User, num string, sum primit.Currency) error
-	List(ctx context.Context, user2 user.User) (wtdrwls []balance.Withdrawal, err error)
+	List(ctx context.Context, user2 user.User) (wtdrwls []entity.Withdrawal, err error)
 }
 
 type GopherMart struct {

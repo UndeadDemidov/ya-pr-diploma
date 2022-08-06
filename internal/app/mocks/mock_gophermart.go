@@ -8,8 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	balance "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/balance"
-	order "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
+	order "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
 	primit "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	user "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	gomock "github.com/golang/mock/gomock"
@@ -143,10 +142,10 @@ func (m *MockBalanceGetter) EXPECT() *MockBalanceGetterMockRecorder {
 }
 
 // Get mocks base method.
-func (m *MockBalanceGetter) Get(arg0 context.Context, arg1 user.User) (balance.Balance, error) {
+func (m *MockBalanceGetter) Get(arg0 context.Context, arg1 user.User) (order.Balance, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(balance.Balance)
+	ret0, _ := ret[0].(order.Balance)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -195,10 +194,10 @@ func (mr *MockWithdrawalProcessorMockRecorder) Add(arg0, arg1, arg2, arg3 interf
 }
 
 // List mocks base method.
-func (m *MockWithdrawalProcessor) List(arg0 context.Context, arg1 user.User) ([]balance.Withdrawal, error) {
+func (m *MockWithdrawalProcessor) List(arg0 context.Context, arg1 user.User) ([]order.Withdrawal, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]balance.Withdrawal)
+	ret0, _ := ret[0].([]order.Withdrawal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

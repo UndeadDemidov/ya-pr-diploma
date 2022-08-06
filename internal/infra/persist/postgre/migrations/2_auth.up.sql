@@ -1,5 +1,3 @@
-DROP TABLE auth;
-
 CREATE TABLE auth
 (
     id         UUID        DEFAULT gen_random_uuid() NOT NULL

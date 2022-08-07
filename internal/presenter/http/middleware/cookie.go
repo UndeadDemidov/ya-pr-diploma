@@ -60,10 +60,10 @@ func SessionsCookie(sessions *Sessions) func(next http.Handler) http.Handler {
 
 func getSessionTokenFromCookie(name string, r *http.Request) (token SessionToken, err error) {
 	c, err := r.Cookie(name)
-	log.Debug().Msgf("got cookie %s: %s", c.Name, c.Value)
 	if err != nil {
 		return "", err
 	}
+	log.Debug().Msgf("getSessionTokenFromCookie: got cookie %s: %s", c.Name, c.Value)
 	cookie := GetSignedCookieFromVanilla(c)
 	err = cookie.DetachSign()
 	if err != nil {

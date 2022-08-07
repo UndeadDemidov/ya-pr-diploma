@@ -40,7 +40,7 @@ func NewGopherMart(auth Authenticator, order OrderProcessor) *GopherMart {
 	if auth == nil {
 		panic("missing Authenticator, parameter must not be nil")
 	}
-	if auth == nil {
+	if order == nil {
 		panic("missing OrderProcessor, parameter must not be nil")
 	}
 	return &GopherMart{

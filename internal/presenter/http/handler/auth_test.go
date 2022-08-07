@@ -38,7 +38,7 @@ func TestAuth_RegisterUser(t *testing.T) {
 			name: "status 200",
 			prepare: func(f *fields) {
 				gomock.InOrder(
-					f.auth.EXPECT().SignIn(context.Background(), gomock.Any(), gomock.Any()).Return(nil),
+					f.auth.EXPECT().SignIn(context.Background(), gomock.Any(), gomock.Any()).Return(user.User{ID: "1"}, nil),
 				)
 			},
 			args: args{
@@ -81,7 +81,7 @@ func TestAuth_RegisterUser(t *testing.T) {
 			name: "status 409",
 			prepare: func(f *fields) {
 				gomock.InOrder(
-					f.auth.EXPECT().SignIn(context.Background(), gomock.Any(), gomock.Any()).Return(errors2.ErrLoginIsInUseAlready),
+					f.auth.EXPECT().SignIn(context.Background(), gomock.Any(), gomock.Any()).Return(user.User{}, errors2.ErrLoginIsInUseAlready),
 				)
 			},
 			args: args{
@@ -94,7 +94,7 @@ func TestAuth_RegisterUser(t *testing.T) {
 			name: "status 500",
 			prepare: func(f *fields) {
 				gomock.InOrder(
-					f.auth.EXPECT().SignIn(context.Background(), gomock.Any(), gomock.Any()).Return(errDummy),
+					f.auth.EXPECT().SignIn(context.Background(), gomock.Any(), gomock.Any()).Return(user.User{}, errDummy),
 				)
 			},
 			args: args{

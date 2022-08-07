@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	order "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
+	entity "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
 	primit "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	user "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	gomock "github.com/golang/mock/gomock"
@@ -53,11 +53,12 @@ func (mr *MockAuthenticatorMockRecorder) Login(arg0, arg1, arg2 interface{}) *go
 }
 
 // SignIn mocks base method.
-func (m *MockAuthenticator) SignIn(arg0 context.Context, arg1, arg2 string) error {
+func (m *MockAuthenticator) SignIn(arg0 context.Context, arg1, arg2 string) (user.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SignIn", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(user.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // SignIn indicates an expected call of SignIn.
@@ -104,10 +105,10 @@ func (mr *MockOrderProcessorMockRecorder) Add(arg0, arg1, arg2 interface{}) *gom
 }
 
 // List mocks base method.
-func (m *MockOrderProcessor) List(arg0 context.Context, arg1 user.User) ([]order.Order, error) {
+func (m *MockOrderProcessor) List(arg0 context.Context, arg1 user.User) ([]entity.Order, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]order.Order)
+	ret0, _ := ret[0].([]entity.Order)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -142,10 +143,10 @@ func (m *MockBalanceGetter) EXPECT() *MockBalanceGetterMockRecorder {
 }
 
 // Get mocks base method.
-func (m *MockBalanceGetter) Get(arg0 context.Context, arg1 user.User) (order.Balance, error) {
+func (m *MockBalanceGetter) Get(arg0 context.Context, arg1 user.User) (entity.Balance, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(order.Balance)
+	ret0, _ := ret[0].(entity.Balance)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -194,10 +195,10 @@ func (mr *MockWithdrawalProcessorMockRecorder) Add(arg0, arg1, arg2, arg3 interf
 }
 
 // List mocks base method.
-func (m *MockWithdrawalProcessor) List(arg0 context.Context, arg1 user.User) ([]order.Withdrawal, error) {
+func (m *MockWithdrawalProcessor) List(arg0 context.Context, arg1 user.User) ([]entity.Withdrawal, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]order.Withdrawal)
+	ret0, _ := ret[0].([]entity.Withdrawal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

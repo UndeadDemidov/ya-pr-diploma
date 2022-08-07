@@ -2,15 +2,11 @@ package postgre
 
 import (
 	"context"
-	"embed"
 
 	_ "github.com/golang-migrate/migrate/v4/database/pgx"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rs/zerolog/log"
 )
-
-//go:embed migrations/*.sql
-var fs embed.FS
 
 type Persist struct {
 	*User

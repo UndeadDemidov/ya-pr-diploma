@@ -54,26 +54,26 @@ func NewServiceWithDefaultCredMan(repo Repository, userSvc user.Registerer) *Ser
 // ToDo удалить пользователя (компенсация), если ошибка при добавлении кред, так как пользователь и его креды должны быть в БД
 // ToDo альтернативно можно проврять, что пользовтель есть, а кред нет, тогда просто добавить креды
 // В реальном проекте я бы наплевал на архитектурную красоту в сервисе и сделал бы транзакцию: добавление пользователя+креды
-func (s Service) SignIn(ctx context.Context, login, pword string) error {
+func (s Service) SignIn(ctx context.Context, login, pword string) (usr user.User, err error) {
 	// найти пользователя по логину - если есть, то занят
-	_, err := s.credMan.GetUser(ctx, login)
+	_, err = s.credMan.GetUser(ctx, login)
 	if err == nil {
-		return errors2.ErrLoginIsInUseAlready
+		return user.User{}, errors2.ErrLoginIsInUseAlready
 	}
 	// если не занят, то создаем пустого пользователя и регистрируем его
-	usr := user.NewUser()
+	usr = user.NewUser()
 	err = s.userSvc.RegisterNewUser(ctx, usr)
 	if err != nil {
-		return err
+		return user.User{}, err
 	}
 	// создаем креды на пользователя
 	err = s.credMan.AddNewUser(ctx, usr, login, pword)
 	if err != nil {
-		return err
+		return user.User{}, err
 	}
-	return nil
+	return usr, nil
 }
 
-func (s Service) Login(ctx context.Context, login, pword string) (user user.User, err error) {
+func (s Service) Login(ctx context.Context, login, pword string) (usr user.User, err error) {
 	return s.credMan.AuthenticateUser(ctx, login, pword)
 }

@@ -126,6 +126,7 @@ func TestAuth_RegisterUser(t *testing.T) {
 			auth := NewAuth(mockAuth, midware.NewDefaultSessions())
 			auth.RegisterUser(w, request)
 			result := w.Result()
+			defer result.Body.Close()
 			require.Equal(t, tt.want, result.StatusCode)
 		})
 	}
@@ -237,6 +238,7 @@ func TestAuth_LoginUser(t *testing.T) {
 			auth := NewAuth(mockAuth, midware.NewDefaultSessions())
 			auth.LoginUser(w, request)
 			result := w.Result()
+			defer result.Body.Close()
 			require.Equal(t, tt.want, result.StatusCode)
 		})
 	}

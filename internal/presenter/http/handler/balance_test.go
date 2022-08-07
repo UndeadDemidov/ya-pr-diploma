@@ -109,6 +109,7 @@ func TestBalance_Get(t *testing.T) {
 			ctx := context.WithValue(request.Context(), middleware.ContextUserIDKey, tt.args.reference)
 			ord.Get(w, request.WithContext(ctx))
 			result := w.Result()
+			defer result.Body.Close()
 			require.Equal(t, tt.want, result.StatusCode)
 			if result.StatusCode == http.StatusOK {
 				b, _ := io.ReadAll(result.Body)

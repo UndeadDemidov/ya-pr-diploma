@@ -158,6 +158,7 @@ func TestWithdrawal_CashOut(t *testing.T) {
 			ctx := context.WithValue(request.Context(), middleware.ContextUserIDKey, tt.args.reference)
 			wtdrwl.CashOut(w, request.WithContext(ctx))
 			result := w.Result()
+			defer result.Body.Close()
 			require.Equal(t, tt.want, result.StatusCode)
 		})
 	}
@@ -278,6 +279,7 @@ func TestWithdrawal_History(t *testing.T) {
 			ctx := context.WithValue(request.Context(), middleware.ContextUserIDKey, tt.args.reference)
 			ord.History(w, request.WithContext(ctx))
 			result := w.Result()
+			defer result.Body.Close()
 			require.Equal(t, tt.want, result.StatusCode)
 			if result.StatusCode == http.StatusOK {
 				b, _ := io.ReadAll(result.Body)

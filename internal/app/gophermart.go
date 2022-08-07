@@ -12,7 +12,7 @@ import (
 //go:generate mockgen -destination=./mocks/mock_gophermart.go . Authenticator,OrderProcessor,BalanceGetter,WithdrawalProcessor
 
 type Authenticator interface {
-	SignIn(ctx context.Context, login, pword string) error
+	SignIn(ctx context.Context, login, pword string) (usr user.User, err error)
 	Login(ctx context.Context, login, pword string) (usr user.User, err error)
 }
 

@@ -16,7 +16,7 @@ import (
 
 var (
 	// ToDo - заменить на нормальные ответы в json!
-	ErrInvalidContentType   = fmt.Errorf("set header value %v to %v", utils.ContentTypeKey, utils.ContentTypeJSON)
+	ErrInvalidContentType   = fmt.Errorf("set header key %v to proper value", utils.ContentTypeKey)
 	ErrProperJSONIsExpected = errors.New("proper JSON is expected, read task description carefully")
 )
 

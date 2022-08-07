@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/app"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	_ "github.com/golang/mock/mockgen/model"
@@ -18,7 +17,7 @@ type CredentialManager interface {
 	// DisableUser(user user.User) error
 }
 
-var _ app.Authenticator = (*Service)(nil)
+// var _ app.Authenticator = (*Service)(nil)
 
 type Service struct {
 	userSvc user.Registerer

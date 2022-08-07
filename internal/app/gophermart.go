@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	_ "github.com/golang/mock/mockgen/model"
@@ -18,7 +19,7 @@ type Authenticator interface {
 
 type OrderProcessor interface {
 	Add(ctx context.Context, usr user.User, num string) error
-	List(ctx context.Context, usr user.User) (ords []entity.Order, err error)
+	List(ctx context.Context, usr user.User) (ords []order.Order, err error)
 }
 
 type BalanceGetter interface {
@@ -32,11 +33,18 @@ type WithdrawalProcessor interface {
 
 type GopherMart struct {
 	Authenticator
+	OrderProcessor
 }
 
-func NewGopherMart(auth Authenticator) *GopherMart {
+func NewGopherMart(auth Authenticator, order OrderProcessor) *GopherMart {
 	if auth == nil {
 		panic("missing Authenticator, parameter must not be nil")
 	}
-	return &GopherMart{Authenticator: auth}
+	if auth == nil {
+		panic("missing OrderProcessor, parameter must not be nil")
+	}
+	return &GopherMart{
+		Authenticator:  auth,
+		OrderProcessor: order,
+	}
 }

@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	entity "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
 	primit "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	user "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	gomock "github.com/golang/mock/gomock"
@@ -105,10 +106,10 @@ func (mr *MockOrderProcessorMockRecorder) Add(arg0, arg1, arg2 interface{}) *gom
 }
 
 // List mocks base method.
-func (m *MockOrderProcessor) List(arg0 context.Context, arg1 user.User) ([]entity.Order, error) {
+func (m *MockOrderProcessor) List(arg0 context.Context, arg1 user.User) ([]order.Order, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]entity.Order)
+	ret0, _ := ret[0].([]order.Order)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

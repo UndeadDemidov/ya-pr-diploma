@@ -1,12 +1,15 @@
-package entity
+package order
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
+	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
+	"github.com/google/uuid"
 )
 
 type ProcessingStatus int
@@ -14,6 +17,8 @@ type ProcessingStatus int
 var (
 	_ fmt.Stringer   = (*ProcessingStatus)(nil)
 	_ json.Marshaler = (*ProcessingStatus)(nil)
+
+	ErrOrderInvalidProcessingStatus = errors.New("invalid order processing status")
 )
 
 const (
@@ -23,12 +28,24 @@ const (
 	Processed
 )
 
-var statuses = [...]string{"NEW", "PROCESSING", "INVALID", "PROCESSED"}
+func ParseProcessingStatus(s string) (ProcessingStatus, error) {
+	var strings = map[string]ProcessingStatus{
+		"NEW":        New,
+		"PROCESSING": Processing,
+		"INVALID":    Invalid,
+		"PROCESSED":  Processed,
+	}
+	if status, ok := strings[s]; ok {
+		return status, nil
+	}
+	return Invalid, ErrOrderInvalidProcessingStatus
+}
 
 func (s ProcessingStatus) String() string {
 	if s < New || s > Processed {
 		return fmt.Sprintf("ProcessingStatus(%d)", int(s))
 	}
+	var statuses = [...]string{"NEW", "PROCESSING", "INVALID", "PROCESSED"}
 	return statuses[s]
 }
 
@@ -44,7 +61,7 @@ func (s ProcessingStatus) IsValid() bool {
 	return false
 }
 
-// Order
+// Service
 // Вообще-то это по смыслу не фига не заказ, а бонус за заказ! А баланс - это совокупность бонусов и списаний.
 type Order struct {
 	ID        string            `json:"-"`
@@ -54,6 +71,17 @@ type Order struct {
 	Accrual   primit.Currency   `json:"accrual,omitempty"`
 	Unloaded  time.Time         `json:"uploaded_at"`
 	Processed time.Time         `json:"-"`
+}
+
+func NewOrder(usr user.User, num primit.LuhnNumber) Order {
+	if !num.IsValid() {
+		panic(errors2.ErrOrderInvalidNumberFormat)
+	}
+	return Order{
+		ID:     uuid.New().String(),
+		User:   usr,
+		Number: num,
+	}
 }
 
 func (o *Order) MarshalJSON() ([]byte, error) {

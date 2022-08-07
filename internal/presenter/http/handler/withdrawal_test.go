@@ -11,6 +11,7 @@ import (
 
 	mock "github.com/UndeadDemidov/ya-pr-diploma/internal/app/mocks"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
@@ -230,11 +231,11 @@ func TestWithdrawal_History(t *testing.T) {
 					{
 						ID:   "1",
 						User: user.User{ID: "1"},
-						Order: entity.Order{
+						Order: order.Order{
 							ID:        "1",
 							User:      user.User{ID: "1"},
 							Number:    2377225624,
-							Status:    entity.Processed,
+							Status:    order.Processed,
 							Accrual:   200,
 							Unloaded:  time.Time{},
 							Processed: time.Time{},

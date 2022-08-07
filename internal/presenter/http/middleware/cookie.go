@@ -12,6 +12,7 @@ import (
 
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/utils"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -59,11 +60,11 @@ func SessionsCookie(sessions *Sessions) func(next http.Handler) http.Handler {
 
 func getSessionTokenFromCookie(name string, r *http.Request) (token SessionToken, err error) {
 	c, err := r.Cookie(name)
+	log.Debug().Msgf("got cookie %s: %s", c.Name, c.Value)
 	if err != nil {
 		return "", err
 	}
-	cookie := NewSessionSignedCookie("")
-	cookie.Cookie = c
+	cookie := GetSignedCookieFromVanilla(c)
 	err = cookie.DetachSign()
 	if err != nil {
 		return "", err
@@ -100,8 +101,19 @@ func NewSignedCookie(path, name, val string, maxAge int, saltStartIdx, saltEndId
 	return sc
 }
 
+func GetSignedCookieFromVanilla(cookie *http.Cookie) (sc SignedCookie) {
+	sc = SignedCookie{
+		Cookie:       cookie,
+		SaltStartIdx: saltStartIdx,
+		SaltEndIdx:   saltEndIdx,
+	}
+
+	return sc
+}
+
 func (sc *SignedCookie) AttachSign() {
 	sc.BaseValue = sc.Value
+	log.Debug().Msgf("AttachSign: cookie base value: %s", sc.BaseValue)
 	if len(sc.key) == 0 {
 		sc.RecalcKey()
 	}
@@ -132,6 +144,7 @@ func (sc *SignedCookie) DetachSign() (err error) {
 		return ErrSignedCookieInvalidValueOrUnsigned
 	}
 	sc.BaseValue = ss[0]
+	log.Debug().Msgf("DetachSign: cookie base value: %s", sc.BaseValue)
 	sc.RecalcKey()
 
 	sign := ss[1]

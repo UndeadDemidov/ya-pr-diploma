@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 )
@@ -20,7 +21,7 @@ var _ json.Marshaler = (*Withdrawal)(nil)
 type Withdrawal struct {
 	ID        string          `json:"-"`
 	User      user.User       `json:"-"`
-	Order     Order           `json:"order"`
+	Order     order.Order     `json:"order"`
 	Sum       primit.Currency `json:"sum"`
 	Processed time.Time       `json:"processed_at"`
 }

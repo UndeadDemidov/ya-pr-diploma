@@ -13,12 +13,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	selectUserByLogin    = "SELECT user_id FROM auth WHERE login=$1"
-	selectAuthentication = "SELECT user_id FROM auth WHERE login=$1 AND PASSWORD=$2"
-	insertCredentials    = "INSERT INTO auth (user_id, login, password) VALUES ($1, $2, $3)"
-)
-
 type Auth struct {
 	db *pgxpool.Pool
 }
@@ -33,6 +27,7 @@ func NewAuth(db *pgxpool.Pool) *Auth {
 }
 
 func (a Auth) Create(ctx context.Context, usr user.User, login, pword string) error {
+	const insertCredentials = "INSERT INTO auth (user_id, login, password) VALUES ($1, $2, $3)"
 	_, err := a.db.Exec(ctx, insertCredentials, usr.ID, login, pword)
 	if err != nil {
 		var pgErr pq.Error
@@ -46,6 +41,7 @@ func (a Auth) Create(ctx context.Context, usr user.User, login, pword string) er
 
 func (a Auth) Read(ctx context.Context, login string) (usr user.User, err error) {
 	var userID string
+	const selectUserByLogin = "SELECT user_id FROM auth WHERE login=$1"
 	err = a.db.QueryRow(ctx, selectUserByLogin, login).Scan(&userID)
 	if err != nil {
 		return user.User{}, err
@@ -55,6 +51,7 @@ func (a Auth) Read(ctx context.Context, login string) (usr user.User, err error)
 
 func (a Auth) ReadWithPassword(ctx context.Context, login, pword string) (usr user.User, err error) {
 	var userID string
+	const selectAuthentication = "SELECT user_id FROM auth WHERE login=$1 AND PASSWORD=$2"
 	err = a.db.QueryRow(ctx, selectAuthentication, login, pword).Scan(&userID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

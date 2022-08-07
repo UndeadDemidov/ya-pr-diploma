@@ -103,7 +103,7 @@ func TestService_SignIn(t *testing.T) {
 			}
 
 			s := NewService(reg, man)
-			if err := s.SignIn(context.Background(), tt.args.login, tt.args.pword); (err != nil) != tt.wantErr {
+			if _, err := s.SignIn(context.Background(), tt.args.login, tt.args.pword); (err != nil) != tt.wantErr {
 				t.Errorf("SignIn() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

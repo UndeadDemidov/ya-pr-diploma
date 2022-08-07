@@ -8,7 +8,7 @@ CREATE TABLE orders
     user_id      uuid                                   NOT NULL
         CONSTRAINT auth_users_id_fk
             REFERENCES users,
-    number       VARCHAR                                NOT NULL,
+    number       BIGINT                                 NOT NULL,
     status       order_status DEFAULT 'NEW'             NOT NULL,
     accrual      INTEGER      DEFAULT 0,
     uploaded_at  timestamptz  DEFAULT NOW()             NOT NULL,

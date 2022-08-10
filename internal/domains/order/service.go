@@ -6,7 +6,6 @@ import (
 
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
-	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 )
 
 // var _ app.OrderProcessor = (*Service)(nil)
@@ -33,10 +32,10 @@ func (s Service) Add(ctx context.Context, usr user.User, num string) error {
 		return err
 	}
 	lnum := primit.LuhnNumber(num64)
-	if !lnum.IsValid() {
-		return errors2.ErrOrderInvalidNumberFormat
+	ord, err := NewOrder(usr, lnum)
+	if err != nil {
+		return err
 	}
-	ord := NewOrder(usr, lnum)
 	err = s.repo.Create(ctx, ord)
 	if err != nil {
 		return err

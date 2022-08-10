@@ -73,15 +73,15 @@ type Order struct {
 	Processed time.Time         `json:"-"`
 }
 
-func NewOrder(usr user.User, num primit.LuhnNumber) Order {
+func NewOrder(usr user.User, num primit.LuhnNumber) (Order, error) {
 	if !num.IsValid() {
-		panic(errors2.ErrOrderInvalidNumberFormat)
+		return Order{}, errors2.ErrOrderInvalidNumberFormat
 	}
 	return Order{
 		ID:     uuid.New().String(),
 		User:   usr,
 		Number: num,
-	}
+	}, nil
 }
 
 func (o *Order) MarshalJSON() ([]byte, error) {

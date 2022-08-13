@@ -10,6 +10,7 @@ import (
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/rs/zerolog/log"
 )
 
 type Order struct {
@@ -68,7 +69,7 @@ WHERE user_id=$1
 	}
 	defer rows.Close()
 
-	return o.list(ctx, rows)
+	return o.list(rows)
 }
 
 func (o Order) ListUnprocessed(ctx context.Context) ([]order.Order, error) {
@@ -83,10 +84,10 @@ WHERE status in ('NEW','PROCESSING')
 	}
 	defer rows.Close()
 
-	return o.list(ctx, rows)
+	return o.list(rows)
 }
 
-func (o Order) list(ctx context.Context, rows pgx.Rows) (ords []order.Order, err error) {
+func (o Order) list(rows pgx.Rows) (ords []order.Order, err error) {
 	ords = make([]order.Order, 0, 4)
 	for rows.Next() {
 		var (
@@ -110,4 +111,36 @@ func (o Order) list(ctx context.Context, rows pgx.Rows) (ords []order.Order, err
 		return nil, rows.Err()
 	}
 	return ords, nil
+}
+
+func (o Order) Update(ctx context.Context, ord order.Order) error {
+	const updateStmt = `
+UPDATE orders
+SET status = $2,
+    accrual = $3,
+    processed_at = $4
+WHERE id = $1;
+`
+	tx, err := o.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			err = tx.Rollback(ctx)
+			if err != nil {
+				log.Err(err).Msg("got error on rollback transaction")
+				return
+			}
+		} else {
+			err = tx.Commit(ctx)
+			if err != nil {
+				log.Err(err).Msg("got error on commit transaction")
+				return
+			}
+		}
+	}()
+
+	_, err = o.db.Exec(ctx, updateStmt, ord.ID, ord.Status.String(), ord.Accrual, ord.Processed)
+	return err
 }

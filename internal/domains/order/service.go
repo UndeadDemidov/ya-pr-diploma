@@ -2,6 +2,7 @@ package order
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -13,25 +14,42 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// var _ app.OrderProcessor = (*Service)(nil)
+var (
+	ErrOrderInvalidAccrualResult = errors.New("got invalid accrual result")
+	statusMapping                = map[AccrualStatus]ProcessingStatus{
+		AccrualRegistered: New,
+		AccrualProcessing: Processing,
+		AccrualInvalid:    Invalid,
+		AccrualProcessed:  Processed,
+	}
+	// _ app.OrderProcessor = (*Service)(nil)
+)
 
 type Repository interface {
 	Create(ctx context.Context, ord Order) error
 	ListByUser(ctx context.Context, usr user.User) ([]Order, error)
 	ListUnprocessed(ctx context.Context) ([]Order, error)
+	Update(ctx context.Context, ord Order) error
 }
 
 type Service struct {
-	accrualSystemAddress string
-	repo                 Repository
-	done                 chan bool
+	repo       Repository
+	httpClient *resty.Client
+	done       chan bool
 }
 
 func NewService(accrualAddr string, repo Repository) *Service {
 	if repo == nil {
 		panic("missing Repository, parameter must not be nil")
 	}
-	s := &Service{accrualSystemAddress: accrualAddr, repo: repo}
+	client := resty.New()
+	client.SetBaseURL(accrualAddr).SetTimeout(time.Second).SetRetryCount(3).
+		AddRetryCondition(
+			func(r *resty.Response, err error) bool {
+				return r.StatusCode() == http.StatusTooManyRequests
+			},
+		)
+	s := &Service{httpClient: client, repo: repo}
 	s.done = make(chan bool)
 	go s.accrualUpdaterService()
 	return s
@@ -68,7 +86,7 @@ func (s Service) accrualUpdaterService() {
 	for {
 		select {
 		case <-tick:
-			err := s.accuralUpdater(ctx)
+			err := s.accrualUpdater(ctx)
 			if err != nil {
 				log.Err(err).Msg("caught error in accrualUpdaterService")
 			}
@@ -78,7 +96,7 @@ func (s Service) accrualUpdaterService() {
 	}
 }
 
-func (s Service) accuralUpdater(ctx context.Context) error {
+func (s Service) accrualUpdater(ctx context.Context) error {
 	log.Debug().Msg("orders updating...")
 	orders, err := s.repo.ListUnprocessed(ctx)
 	if err != nil {
@@ -87,31 +105,36 @@ func (s Service) accuralUpdater(ctx context.Context) error {
 
 	errs, ctx := errgroup.WithContext(ctx)
 	for _, order := range orders {
-		errs.Go(func() error { return s.updateOrder(ctx, order) }) //nolint:govet
+		errs.Go(func() error { return s.updateOrder(ctx, order) })
 	}
 	return errs.Wait()
 }
 
 func (s Service) updateOrder(ctx context.Context, ord Order) error {
-	var result struct {
-		Order   string          `json:"order"`
-		Status  string          `json:"status"`
-		Accrual primit.Currency `json:"accrual"`
-	}
-	client := resty.New()
-	client.SetBaseURL(s.accrualSystemAddress).SetTimeout(time.Second).SetRetryCount(3).
-		AddRetryCondition(
-			func(r *resty.Response, err error) bool {
-				return r.StatusCode() == http.StatusTooManyRequests
-			},
-		)
-	_, err := client.R().SetPathParams(map[string]string{
-		"number": ord.Number.String(),
-	}).SetResult(&result).Get("/api/orders/{number}")
+	accrual, err := s.getAccrual(ord)
 	if err != nil {
 		return err
 	}
+	if accrual.Status == AccrualProcessed {
+		ord.Accrual = accrual.Accrual
+	}
+	ord.Status = statusMapping[accrual.Status]
+	ord.Processed = time.Now()
+	return s.repo.Update(ctx, ord)
+}
+
+func (s Service) getAccrual(ord Order) (Accrual, error) {
+	var result Accrual
+	_, err := s.httpClient.R().SetPathParams(map[string]string{
+		"number": ord.Number.String(),
+	}).SetResult(&result).Get("/api/orders/{number}")
+	if err != nil {
+		return result, err
+	}
 	log.Debug().Msgf("request accrual for order %s, got result (%v)",
 		ord.Number.String(), result)
-	return nil
+	if result.Order == "" {
+		return result, ErrOrderInvalidAccrualResult
+	}
+	return result, nil
 }

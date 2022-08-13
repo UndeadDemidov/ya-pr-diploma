@@ -68,7 +68,26 @@ WHERE user_id=$1
 	}
 	defer rows.Close()
 
-	ords := make([]order.Order, 0, 4)
+	return o.list(ctx, rows)
+}
+
+func (o Order) ListUnprocessed(ctx context.Context) ([]order.Order, error) {
+	const selectOrdersByUser = `
+SELECT id, number, status, accrual, uploaded_at, processed_at
+FROM orders
+WHERE status in ('NEW','PROCESSING')
+`
+	rows, err := o.db.Query(ctx, selectOrdersByUser)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return o.list(ctx, rows)
+}
+
+func (o Order) list(ctx context.Context, rows pgx.Rows) (ords []order.Order, err error) {
+	ords = make([]order.Order, 0, 4)
 	for rows.Next() {
 		var (
 			status string

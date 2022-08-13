@@ -1,4 +1,5 @@
--- DATABASE_URI=user=postgres password=postgres dbname=ya_pract sslmode=disable
+-- DATABASE_URI postgres://postgres:postgres@localhost:5432/ya_pract?sslmode=disable
+
 DROP TRIGGER IF EXISTS set_timestamp ON orders;
 DROP FUNCTION IF EXISTS trigger_set_timestamp;
 

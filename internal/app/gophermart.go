@@ -20,6 +20,7 @@ type Authenticator interface {
 type OrderProcessor interface {
 	Add(ctx context.Context, usr user.User, num string) error
 	List(ctx context.Context, usr user.User) (ords []order.Order, err error)
+	Close()
 }
 
 type BalanceGetter interface {
@@ -47,4 +48,8 @@ func NewGopherMart(auth Authenticator, order OrderProcessor) *GopherMart {
 		Authenticator:  auth,
 		OrderProcessor: order,
 	}
+}
+
+func (m GopherMart) Close() {
+	m.OrderProcessor.Close()
 }

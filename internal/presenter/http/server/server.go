@@ -22,6 +22,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type Closer interface {
+	Close()
+}
+
+var _ Closer = (*app.GopherMart)(nil)
+
 type Server struct {
 	dbPool   *pgxpool.Pool
 	mart     *app.GopherMart
@@ -48,7 +54,7 @@ func NewServer(cfg *conf.App) (srv *Server, err error) {
 		return nil, err
 	}
 	svcAuth := auth.NewServiceWithDefaultCredMan(repo.Auth, user.NewService(repo.User))
-	svcOrder := order.NewService(repo.Order)
+	svcOrder := order.NewService(cfg.AccrualSystemAddress, repo.Order)
 	// app configuration
 	s.mart = app.NewGopherMart(svcAuth, svcOrder)
 	// router configuration
@@ -102,6 +108,7 @@ func (s *Server) Run() {
 	log.Info().Msg("Server stopped")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer func() {
+		s.mart.Close()
 		s.dbPool.Close()
 		log.Info().Msg("Everything is closed properly")
 		cancel()

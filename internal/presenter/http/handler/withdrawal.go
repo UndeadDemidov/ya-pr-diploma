@@ -49,6 +49,10 @@ func (wd Withdrawal) CashOut(w http.ResponseWriter, r *http.Request) {
 		utils.InternalServerError(w, errors2.ErrSessionUserCanNotBeDefined)
 		return
 	}
+	if !req.Order.IsValid() {
+		utils.ServerError(w, errors2.ErrOrderInvalidNumberFormat, http.StatusBadRequest)
+		return
+	}
 
 	err = wd.processor.Add(r.Context(), usr, req.Order, req.Sum)
 	switch {
@@ -101,6 +105,6 @@ func (wd Withdrawal) History(w http.ResponseWriter, r *http.Request) {
 // "sum": 751
 // }
 type wtdrwlRequest struct {
-	Order string          `json:"order"`
-	Sum   primit.Currency `json:"sum"`
+	Order primit.LuhnNumber `json:"order,string"`
+	Sum   primit.Currency   `json:"sum"`
 }

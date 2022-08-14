@@ -18,18 +18,19 @@ type Authenticator interface {
 }
 
 type OrderProcessor interface {
+	// ToDo передавать сразу primit.LuhnNumber
 	Add(ctx context.Context, usr user.User, num string) error
-	List(ctx context.Context, usr user.User) ([]order.Order, error)
+	List(context.Context, user.User) ([]order.Order, error)
 	Close()
 }
 
 type BalanceGetter interface {
-	Get(ctx context.Context, usr user.User) (balance.Balance, error)
+	Get(context.Context, user.User) (balance.Balance, error)
 }
 
 type WithdrawalProcessor interface {
-	Add(ctx context.Context, usr user.User, num string, sum primit.Currency) error
-	List(ctx context.Context, user2 user.User) ([]balance.Withdrawal, error)
+	Add(context.Context, user.User, primit.LuhnNumber, primit.Currency) error
+	List(context.Context, user.User) ([]balance.Withdrawal, error)
 }
 
 type GopherMart struct {

@@ -34,3 +34,20 @@ where id=$1;
 	}
 	return balance.NewBalance(usr, bal, acc, wth), nil
 }
+
+func (b Balance) CreateWithdrawal(ctx context.Context, wtdrwl balance.Withdrawal) error {
+	const insertWtdrwl = `
+INSERT INTO withdrawals (id, user_id, order_number, sum)
+VALUES ($1, $2, $3, $4);
+`
+	_, err := b.db.Exec(ctx, insertWtdrwl, wtdrwl.ID, wtdrwl.User.ID, wtdrwl.Order.String(), wtdrwl.Sum)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b Balance) ListWithdrawals(ctx context.Context, u user.User) ([]balance.Withdrawal, error) {
+	// TODO implement me
+	panic("implement me")
+}

@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	withdrawal "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/balance"
+	balance "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/balance"
 	order "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
 	primit "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	user "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
@@ -156,10 +156,10 @@ func (m *MockBalanceGetter) EXPECT() *MockBalanceGetterMockRecorder {
 }
 
 // Get mocks base method.
-func (m *MockBalanceGetter) Get(arg0 context.Context, arg1 user.User) (withdrawal.Balance, error) {
+func (m *MockBalanceGetter) Get(arg0 context.Context, arg1 user.User) (balance.Balance, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(withdrawal.Balance)
+	ret0, _ := ret[0].(balance.Balance)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -194,7 +194,7 @@ func (m *MockWithdrawalProcessor) EXPECT() *MockWithdrawalProcessorMockRecorder 
 }
 
 // Add mocks base method.
-func (m *MockWithdrawalProcessor) Add(arg0 context.Context, arg1 user.User, arg2 string, arg3 primit.Currency) error {
+func (m *MockWithdrawalProcessor) Add(arg0 context.Context, arg1 user.User, arg2 primit.LuhnNumber, arg3 primit.Currency) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Add", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
@@ -208,10 +208,10 @@ func (mr *MockWithdrawalProcessorMockRecorder) Add(arg0, arg1, arg2, arg3 interf
 }
 
 // List mocks base method.
-func (m *MockWithdrawalProcessor) List(arg0 context.Context, arg1 user.User) ([]withdrawal.Withdrawal, error) {
+func (m *MockWithdrawalProcessor) List(arg0 context.Context, arg1 user.User) ([]balance.Withdrawal, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]withdrawal.Withdrawal)
+	ret0, _ := ret[0].([]balance.Withdrawal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

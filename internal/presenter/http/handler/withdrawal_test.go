@@ -7,11 +7,9 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	mock "github.com/UndeadDemidov/ya-pr-diploma/internal/app/mocks"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/balance"
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
@@ -229,17 +227,9 @@ func TestWithdrawal_History(t *testing.T) {
 			args: args{
 				wtdrwls: []balance.Withdrawal{
 					{
-						ID:   "1",
-						User: user.User{ID: "1"},
-						Order: order.Order{
-							ID:        "1",
-							User:      user.User{ID: "1"},
-							Number:    2377225624,
-							Status:    order.Processed,
-							Accrual:   200,
-							Unloaded:  time.Time{},
-							Processed: time.Time{},
-						},
+						ID:        "1",
+						User:      user.User{ID: "1"},
+						Order:     2377225624,
 						Sum:       50000,
 						Processed: utils.TimeRFC3339ParseHelper("2020-12-09T16:09:57+03:00"),
 					},

@@ -1,31 +1,30 @@
 package balance
 
 import (
-	"encoding/json"
 	"time"
 
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
+	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
+	"github.com/google/uuid"
 )
 
-var _ json.Marshaler = (*Withdrawal)(nil)
-
 type Withdrawal struct {
-	ID        string          `json:"-"`
-	User      user.User       `json:"-"`
-	Order     order.Order     `json:"order"`
-	Sum       primit.Currency `json:"sum"`
-	Processed time.Time       `json:"processed_at"`
+	ID        string            `json:"-"`
+	User      user.User         `json:"-"`
+	Order     primit.LuhnNumber `json:"order,string"`
+	Sum       primit.Currency   `json:"sum"`
+	Processed time.Time         `json:"processed_at"`
 }
 
-func (w *Withdrawal) MarshalJSON() ([]byte, error) {
-	type Alias Withdrawal
-	return json.Marshal(&struct {
-		Order string `json:"order"`
-		*Alias
-	}{
-		Order: w.Order.Number.String(),
-		Alias: (*Alias)(w),
-	})
+func NewWithdrawal(usr user.User, num primit.LuhnNumber, sum primit.Currency) (Withdrawal, error) {
+	if !num.IsValid() {
+		return Withdrawal{}, errors2.ErrOrderInvalidNumberFormat
+	}
+	return Withdrawal{
+		ID:    uuid.New().String(),
+		User:  usr,
+		Order: num,
+		Sum:   sum,
+	}, nil
 }

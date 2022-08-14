@@ -58,13 +58,14 @@ func NewServer(cfg *conf.App) (srv *Server, err error) {
 	svcOrder := order.NewService(cfg.AccrualSystemAddress, repo.Order)
 	svcBalance := balance.NewService(repo.Balance)
 	// app configuration
-	s.mart = app.NewGopherMart(svcAuth, svcOrder, svcBalance)
+	s.mart = app.NewGopherMart(svcAuth, svcOrder, svcBalance, svcBalance)
 	// router configuration
 	s.sessions = midware.NewDefaultSessions()
 	s.router = s.buildRouter(
-		handler.NewAuth(s.mart, s.sessions),
-		handler.NewOrder(s.mart),
-		handler.NewBalance(s.mart),
+		handler.NewAuth(s.mart.Authenticator, s.sessions),
+		handler.NewOrder(s.mart.OrderProcessor),
+		handler.NewBalance(s.mart.BalanceGetter),
+		handler.NewWithdrawal(s.mart.WithdrawalProcessor),
 	)
 
 	s.srv = &http.Server{
@@ -74,7 +75,12 @@ func NewServer(cfg *conf.App) (srv *Server, err error) {
 	return s, nil
 }
 
-func (s *Server) buildRouter(auth *handler.Auth, order *handler.Order, bal *handler.Balance) *chi.Mux {
+func (s *Server) buildRouter(
+	auth *handler.Auth,
+	order *handler.Order,
+	bal *handler.Balance,
+	wtdrwl *handler.Withdrawal,
+) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -92,6 +98,7 @@ func (s *Server) buildRouter(auth *handler.Auth, order *handler.Order, bal *hand
 		r.Post("/api/user/orders", order.UploadOrder)
 		r.Get("/api/user/orders", order.DownloadOrders)
 		r.Get("/api/user/balance", bal.Get)
+		r.Post("/api/user/withdrawals", wtdrwl.CashOut)
 	})
 	return r
 }

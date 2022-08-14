@@ -37,9 +37,15 @@ type GopherMart struct {
 	Authenticator
 	OrderProcessor
 	BalanceGetter
+	WithdrawalProcessor
 }
 
-func NewGopherMart(auth Authenticator, order OrderProcessor, bal BalanceGetter) *GopherMart {
+func NewGopherMart(
+	auth Authenticator,
+	order OrderProcessor,
+	bal BalanceGetter,
+	wtdrwl WithdrawalProcessor,
+) *GopherMart {
 	if auth == nil {
 		panic("missing Authenticator, parameter must not be nil")
 	}
@@ -49,10 +55,14 @@ func NewGopherMart(auth Authenticator, order OrderProcessor, bal BalanceGetter) 
 	if bal == nil {
 		panic("missing BalanceGetter, parameter must not be nil")
 	}
+	if wtdrwl == nil {
+		panic("missing WithdrawalProcessor, parameter must not be nil")
+	}
 	return &GopherMart{
-		Authenticator:  auth,
-		OrderProcessor: order,
-		BalanceGetter:  bal,
+		Authenticator:       auth,
+		OrderProcessor:      order,
+		BalanceGetter:       bal,
+		WithdrawalProcessor: wtdrwl,
 	}
 }
 

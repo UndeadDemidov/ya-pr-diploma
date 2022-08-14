@@ -82,10 +82,12 @@ func (s Service) Close() {
 
 func (s Service) accrualUpdaterService() {
 	ctx := context.Background()
-	tick := time.Tick(4 * time.Second)
+	ticker := time.NewTicker(4 * time.Second)
+	defer ticker.Stop()
+
 	for {
 		select {
-		case <-tick:
+		case <-ticker.C:
 			err := s.accrualUpdater(ctx)
 			if err != nil {
 				log.Err(err).Msg("caught error in accrualUpdaterService")
@@ -105,7 +107,8 @@ func (s Service) accrualUpdater(ctx context.Context) error {
 
 	errs, ctx := errgroup.WithContext(ctx)
 	for _, order := range orders {
-		errs.Go(func() error { return s.updateOrder(ctx, order) })
+		ord := order
+		errs.Go(func() error { return s.updateOrder(ctx, ord) })
 	}
 	return errs.Wait()
 }

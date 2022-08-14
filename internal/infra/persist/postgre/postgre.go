@@ -41,6 +41,8 @@ func NewPersist(ctx context.Context, db *pgxpool.Pool) (*Persist, error) {
 // несовместимые connection string и нельзя конвертировать нативный постгресовый формат в uri
 func migrateDB(db *pgxpool.Pool) error {
 	script := `
+DROP TRIGGER IF EXISTS trigger_after_update_orders ON orders;
+DROP FUNCTION IF EXISTS update_accrual;
 DROP TRIGGER IF EXISTS set_timestamp ON orders;
 DROP FUNCTION IF EXISTS trigger_set_timestamp;
 
@@ -55,7 +57,11 @@ CREATE TABLE users
     id         UUID                      NOT NULL
         CONSTRAINT users_pk
             PRIMARY KEY,
-    created_at timestamptz DEFAULT NOW() NOT NULL
+    balance    INTEGER     DEFAULT 0     NOT NULL,
+    accrual    INTEGER     DEFAULT 0     NOT NULL,
+    withdrawn  INTEGER     DEFAULT 0     NOT NULL,
+    created_at timestamptz DEFAULT NOW() NOT NULL,
+    updated_at timestamptz DEFAULT NOW() NOT NULL
 );
 
 CREATE TABLE auth
@@ -89,7 +95,7 @@ CREATE TABLE orders
             REFERENCES users,
     number       BIGINT                                 NOT NULL,
     status       order_status DEFAULT 'NEW'             NOT NULL,
-    accrual      INTEGER      DEFAULT 0,
+    accrual      INTEGER      DEFAULT 0 				NOT NULL,
     uploaded_at  timestamptz  DEFAULT NOW()             NOT NULL,
     processed_at timestamptz  DEFAULT NOW()             NOT NULL
 );
@@ -113,6 +119,27 @@ CREATE TRIGGER set_timestamp
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
+CREATE OR REPLACE FUNCTION update_accrual()
+    RETURNS TRIGGER AS
+$$
+BEGIN
+    UPDATE users as u
+    SET accrual = u.accrual + (NEW.accrual - OLD.accrual),
+        balance = u.balance + (NEW.accrual - OLD.accrual),
+        updated_at = now()
+    WHERE u.id = NEW.user_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER trigger_after_update_orders
+    AFTER UPDATE
+    ON orders
+    FOR EACH ROW
+    WHEN (OLD.status IS DISTINCT FROM NEW.status
+        AND NEW.status = 'PROCESSED'
+        AND OLD.accrual IS DISTINCT FROM NEW.accrual)
+EXECUTE PROCEDURE update_accrual();
 `
 	_, err := db.Exec(context.Background(), script)
 	if err != nil {

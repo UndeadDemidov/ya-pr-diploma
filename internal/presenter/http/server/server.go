@@ -99,6 +99,7 @@ func (s *Server) buildRouter(
 		r.Get("/api/user/orders", order.DownloadOrders)
 		r.Get("/api/user/balance", bal.Get)
 		r.Post("/api/user/balance/withdraw", wtdrwl.CashOut)
+		r.Get("/api/user/withdrawals", wtdrwl.History)
 	})
 	return r
 }

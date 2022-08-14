@@ -98,7 +98,7 @@ func (s *Server) buildRouter(
 		r.Post("/api/user/orders", order.UploadOrder)
 		r.Get("/api/user/orders", order.DownloadOrders)
 		r.Get("/api/user/balance", bal.Get)
-		r.Post("/api/user/withdrawals", wtdrwl.CashOut)
+		r.Post("/api/user/balance/withdraw", wtdrwl.CashOut)
 	})
 	return r
 }

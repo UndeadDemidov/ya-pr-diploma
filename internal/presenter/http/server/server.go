@@ -27,7 +27,7 @@ type Closer interface {
 	Close()
 }
 
-var _ Closer = (*app.GopherMart)(nil)
+// var _ Closer = (*app.GopherMart)(nil)
 
 type Server struct {
 	dbPool   *pgxpool.Pool

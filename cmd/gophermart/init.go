@@ -15,7 +15,7 @@ var cfg *conf.App
 
 func init() {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).With().Caller().Logger()
 
 	cfg = conf.NewAppConfig()
 	cfg.SetPFlag()

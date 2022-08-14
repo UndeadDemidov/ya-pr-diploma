@@ -12,6 +12,7 @@ type Persist struct {
 	*User
 	*Auth
 	*Order
+	*Balance
 }
 
 func NewPersist(ctx context.Context, db *pgxpool.Pool) (*Persist, error) {
@@ -31,9 +32,10 @@ func NewPersist(ctx context.Context, db *pgxpool.Pool) (*Persist, error) {
 	}
 
 	return &Persist{
-		User:  NewUser(db),
-		Auth:  NewAuth(db),
-		Order: NewOrder(db),
+		User:    NewUser(db),
+		Auth:    NewAuth(db),
+		Order:   NewOrder(db),
+		Balance: NewBalance(db),
 	}, nil
 }
 

@@ -8,8 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	entity "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
+	withdrawal "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/balance"
+	order "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
 	primit "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	user "github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	gomock "github.com/golang/mock/gomock"
@@ -105,6 +105,18 @@ func (mr *MockOrderProcessorMockRecorder) Add(arg0, arg1, arg2 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockOrderProcessor)(nil).Add), arg0, arg1, arg2)
 }
 
+// Close mocks base method.
+func (m *MockOrderProcessor) Close() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Close")
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockOrderProcessorMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockOrderProcessor)(nil).Close))
+}
+
 // List mocks base method.
 func (m *MockOrderProcessor) List(arg0 context.Context, arg1 user.User) ([]order.Order, error) {
 	m.ctrl.T.Helper()
@@ -144,10 +156,10 @@ func (m *MockBalanceGetter) EXPECT() *MockBalanceGetterMockRecorder {
 }
 
 // Get mocks base method.
-func (m *MockBalanceGetter) Get(arg0 context.Context, arg1 user.User) (entity.Balance, error) {
+func (m *MockBalanceGetter) Get(arg0 context.Context, arg1 user.User) (withdrawal.Balance, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(entity.Balance)
+	ret0, _ := ret[0].(withdrawal.Balance)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -196,10 +208,10 @@ func (mr *MockWithdrawalProcessorMockRecorder) Add(arg0, arg1, arg2, arg3 interf
 }
 
 // List mocks base method.
-func (m *MockWithdrawalProcessor) List(arg0 context.Context, arg1 user.User) ([]entity.Withdrawal, error) {
+func (m *MockWithdrawalProcessor) List(arg0 context.Context, arg1 user.User) ([]withdrawal.Withdrawal, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1)
-	ret0, _ := ret[0].([]entity.Withdrawal)
+	ret0, _ := ret[0].([]withdrawal.Withdrawal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

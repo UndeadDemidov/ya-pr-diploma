@@ -1,4 +1,4 @@
-package entity
+package balance
 
 import (
 	"encoding/json"
@@ -8,13 +8,6 @@ import (
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 )
-
-type Balance struct {
-	User      user.User       `json:"-"`
-	Current   primit.Currency `json:"current"`
-	Collected primit.Currency `json:"-"`
-	Withdrawn primit.Currency `json:"withdrawn,omitempty"`
-}
 
 var _ json.Marshaler = (*Withdrawal)(nil)
 

@@ -9,8 +9,6 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-const insertUser = "INSERT INTO users (id) VALUES ($1)"
-
 type User struct {
 	db *pgxpool.Pool
 }
@@ -25,6 +23,7 @@ func NewUser(db *pgxpool.Pool) *User {
 }
 
 func (u User) Create(ctx context.Context, usr user.User) error {
+	const insertUser = "INSERT INTO users (id) VALUES ($1)"
 	_, err := u.db.Exec(ctx, insertUser, usr.ID)
 	if err != nil {
 		return err

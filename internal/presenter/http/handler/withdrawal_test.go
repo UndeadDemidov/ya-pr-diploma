@@ -10,7 +10,7 @@ import (
 	"time"
 
 	mock "github.com/UndeadDemidov/ya-pr-diploma/internal/app/mocks"
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/balance"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
@@ -167,11 +167,11 @@ func TestWithdrawal_CashOut(t *testing.T) {
 
 func TestWithdrawal_History(t *testing.T) {
 	type fields struct {
-		wtdrwls   []entity.Withdrawal
+		wtdrwls   []balance.Withdrawal
 		processor *mock.MockWithdrawalProcessor
 	}
 	type args struct {
-		wtdrwls   []entity.Withdrawal
+		wtdrwls   []balance.Withdrawal
 		json      string
 		reference string
 	}
@@ -213,7 +213,7 @@ func TestWithdrawal_History(t *testing.T) {
 				)
 			},
 			args: args{
-				wtdrwls:   make([]entity.Withdrawal, 0),
+				wtdrwls:   make([]balance.Withdrawal, 0),
 				json:      "",
 				reference: "1",
 			},
@@ -227,7 +227,7 @@ func TestWithdrawal_History(t *testing.T) {
 				)
 			},
 			args: args{
-				wtdrwls: []entity.Withdrawal{
+				wtdrwls: []balance.Withdrawal{
 					{
 						ID:   "1",
 						User: user.User{ID: "1"},

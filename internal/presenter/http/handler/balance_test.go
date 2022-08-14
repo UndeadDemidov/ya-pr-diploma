@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	mock "github.com/UndeadDemidov/ya-pr-diploma/internal/app/mocks"
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/balance"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
 	"github.com/golang/mock/gomock"
 	"github.com/rs/zerolog"
@@ -19,11 +19,11 @@ import (
 
 func TestBalance_Get(t *testing.T) {
 	type fields struct {
-		bal    entity.Balance
+		bal    balance.Balance
 		getter *mock.MockBalanceGetter
 	}
 	type args struct {
-		bal       entity.Balance
+		bal       balance.Balance
 		json      string
 		reference string
 	}
@@ -37,7 +37,7 @@ func TestBalance_Get(t *testing.T) {
 			name:    "session error",
 			prepare: nil,
 			args: args{
-				bal:       entity.Balance{},
+				bal:       balance.Balance{},
 				json:      "",
 				reference: "",
 			},
@@ -51,7 +51,7 @@ func TestBalance_Get(t *testing.T) {
 				)
 			},
 			args: args{
-				bal:       entity.Balance{},
+				bal:       balance.Balance{},
 				json:      "",
 				reference: "1",
 			},
@@ -65,7 +65,7 @@ func TestBalance_Get(t *testing.T) {
 				)
 			},
 			args: args{
-				bal:       entity.Balance{},
+				bal:       balance.Balance{},
 				json:      `{"current":0}`,
 				reference: "1",
 			},
@@ -79,7 +79,7 @@ func TestBalance_Get(t *testing.T) {
 				)
 			},
 			args: args{
-				bal:       entity.Balance{Current: 200, Withdrawn: 50},
+				bal:       balance.Balance{Current: 200, Withdrawn: 50},
 				json:      `{"current":2,"withdrawn":0.50}`,
 				reference: "1",
 			},

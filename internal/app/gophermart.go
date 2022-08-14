@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/balance"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
@@ -13,40 +13,45 @@ import (
 //go:generate mockgen -destination=./mocks/mock_gophermart.go . Authenticator,OrderProcessor,BalanceGetter,WithdrawalProcessor
 
 type Authenticator interface {
-	SignIn(ctx context.Context, login, pword string) (usr user.User, err error)
-	Login(ctx context.Context, login, pword string) (usr user.User, err error)
+	SignIn(ctx context.Context, login, pword string) (user.User, error)
+	Login(ctx context.Context, login, pword string) (user.User, error)
 }
 
 type OrderProcessor interface {
 	Add(ctx context.Context, usr user.User, num string) error
-	List(ctx context.Context, usr user.User) (ords []order.Order, err error)
+	List(ctx context.Context, usr user.User) ([]order.Order, error)
 	Close()
 }
 
 type BalanceGetter interface {
-	Get(ctx context.Context, usr user.User) (bal entity.Balance, err error)
+	Get(ctx context.Context, usr user.User) (balance.Balance, error)
 }
 
 type WithdrawalProcessor interface {
 	Add(ctx context.Context, usr user.User, num string, sum primit.Currency) error
-	List(ctx context.Context, user2 user.User) (wtdrwls []entity.Withdrawal, err error)
+	List(ctx context.Context, user2 user.User) ([]balance.Withdrawal, error)
 }
 
 type GopherMart struct {
 	Authenticator
 	OrderProcessor
+	BalanceGetter
 }
 
-func NewGopherMart(auth Authenticator, order OrderProcessor) *GopherMart {
+func NewGopherMart(auth Authenticator, order OrderProcessor, bal BalanceGetter) *GopherMart {
 	if auth == nil {
 		panic("missing Authenticator, parameter must not be nil")
 	}
 	if order == nil {
 		panic("missing OrderProcessor, parameter must not be nil")
 	}
+	if bal == nil {
+		panic("missing BalanceGetter, parameter must not be nil")
+	}
 	return &GopherMart{
 		Authenticator:  auth,
 		OrderProcessor: order,
+		BalanceGetter:  bal,
 	}
 }
 

@@ -1,18 +1,13 @@
 package conf
 
-type Configurer interface {
-	SetPFlag()
-	Read() error
-}
-
-var _ Configurer = (*App)(nil)
-
+// App является композицией из составных частей конфигурации.
 type App struct {
 	Server
 	Database
 	Externals
 }
 
+// NewAppConfig создает новый экземпляр конфигурации.
 func NewAppConfig() *App {
 	return &App{
 		Server:    Server{},
@@ -21,12 +16,14 @@ func NewAppConfig() *App {
 	}
 }
 
+// SetPFlag устанавливает все флаги параметров вложенных частей композиции.
 func (a *App) SetPFlag() {
 	a.Server.SetPFlag()
 	a.Database.SetPFlag()
 	a.Externals.SetPFlag()
 }
 
+// Read считывает конфигурацию по всем вложенным частям композиции.
 func (a *App) Read() error {
 	err := a.Server.Read()
 	if err != nil {

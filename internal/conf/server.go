@@ -12,7 +12,6 @@ const (
 )
 
 var ErrConfigRunAddressNotSet = errors.New("server address is not set")
-var _ Configurer = (*Server)(nil)
 
 type Server struct {
 	RunAddress string

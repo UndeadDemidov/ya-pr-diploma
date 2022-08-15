@@ -3,6 +3,7 @@ package postgre
 import (
 	"context"
 	"embed"
+	"errors"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -30,7 +31,10 @@ func NewPersist(ctx context.Context, db *pgxpool.Pool) (*Persist, error) {
 		return nil, err
 	}
 	// проверить что бд еще не создано и создать
-	log.Info().Msgf("successfully connected to PG server %s", db.Config().ConnConfig.Host)
+	log.Info().
+		Str("database", db.Config().ConnConfig.Database).
+		Str("host", db.Config().ConnConfig.Host).
+		Msg("successfully connected to PG")
 
 	err = migrateDB(db)
 	if err != nil {
@@ -52,16 +56,19 @@ func migrateDB(db *pgxpool.Pool) error {
 	if err != nil {
 		return err
 	}
+
 	log.Debug().Msg("starting migrations")
 	m, err := migrate.NewWithSourceInstance("iofs", d, db.Config().ConnConfig.ConnString())
 	if err != nil {
 		return err
 	}
+
 	log.Debug().Msg("starting upgrades")
 	err = m.Up()
-	if err != nil {
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return err
 	}
+
 	log.Info().Msg("DB is initialized successfully")
 	return nil
 }

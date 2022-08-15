@@ -5,6 +5,7 @@ import (
 
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/primit"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
+	"github.com/rs/zerolog/log"
 )
 
 // var (
@@ -30,10 +31,15 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) Get(ctx context.Context, usr user.User) (Balance, error) {
+	log.Debug().Str("user id", usr.ID).Msg("get balance for user")
 	return s.repo.Read(ctx, usr)
 }
 
 func (s *Service) Add(ctx context.Context, usr user.User, num primit.LuhnNumber, sum primit.Currency) error {
+	log.Debug().
+		Str("user id", usr.ID).
+		Str("order num", num.String()).
+		Str("sum", sum.String()).Msg("withdrawing")
 	wtdrwl, err := NewWithdrawal(usr, num, sum)
 	if err != nil {
 		return err
@@ -42,5 +48,6 @@ func (s *Service) Add(ctx context.Context, usr user.User, num primit.LuhnNumber,
 }
 
 func (s *Service) List(ctx context.Context, usr user.User) ([]Withdrawal, error) {
+	log.Debug().Str("user id", usr.ID).Msg("looking withdrawal list for user")
 	return s.repo.ListWithdrawals(ctx, usr)
 }

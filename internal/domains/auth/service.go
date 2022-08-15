@@ -6,6 +6,7 @@ import (
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	_ "github.com/golang/mock/mockgen/model"
+	"github.com/rs/zerolog/log"
 )
 
 //go:generate mockgen -destination=./mocks/mock_service.go . CredentialManager
@@ -50,22 +51,20 @@ func NewServiceWithDefaultCredMan(repo Repository, userSvc user.Registerer) *Ser
 // SignIn регистрирует нового пользователя с новым id и добавляет ему логин/пароль
 // В случае если такой логин уже есть, то возвращает ошибку.
 // id пользователя можно получить только после Login с этой же парой логин/пароль
-// ToDo удалить пользователя (компенсация), если ошибка при добавлении кред, так как пользователь и его креды должны быть в БД
-// ToDo альтернативно можно проврять, что пользовтель есть, а кред нет, тогда просто добавить креды
 // В реальном проекте я бы наплевал на архитектурную красоту в сервисе и сделал бы транзакцию: добавление пользователя+креды
 func (s Service) SignIn(ctx context.Context, login, pword string) (user.User, error) {
-	// найти пользователя по логину - если есть, то занят
+	log.Debug().Str("login", login).Msg("lookup user by login")
 	_, err := s.credMan.GetUser(ctx, login)
 	if err == nil {
 		return user.User{}, errors2.ErrLoginIsInUseAlready
 	}
-	// если не занят, то создаем пустого пользователя и регистрируем его
+	log.Debug().Str("login", login).Msg("user not found, creating new one")
 	usr := user.NewUser()
 	err = s.userSvc.RegisterNewUser(ctx, usr)
 	if err != nil {
 		return user.User{}, err
 	}
-	// создаем креды на пользователя
+	log.Debug().Str("login", login).Msg("creating auth record")
 	err = s.credMan.AddNewUser(ctx, usr, login, pword)
 	if err != nil {
 		return user.User{}, err
@@ -74,5 +73,6 @@ func (s Service) SignIn(ctx context.Context, login, pword string) (user.User, er
 }
 
 func (s Service) Login(ctx context.Context, login, pword string) (usr user.User, err error) {
+	log.Debug().Str("login", login).Msg("logging in...")
 	return s.credMan.AuthenticateUser(ctx, login, pword)
 }

@@ -16,7 +16,7 @@ type Repository interface {
 	Create(ctx context.Context, user User) error
 }
 
-var _ Registerer = (*Service)(nil)
+// var _ Registerer = (*Service)(nil)
 
 type Service struct {
 	repo Repository

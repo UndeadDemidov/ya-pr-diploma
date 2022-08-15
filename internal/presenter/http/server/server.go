@@ -23,12 +23,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Closer - контракт для вызова graceful завершения фоновых процессов.
 type Closer interface {
 	Close()
 }
 
 // var _ Closer = (*app.GopherMart)(nil)
 
+// Server - HTTP сервер реализующий начисление баллов за сделанные заказы и использование их для оплаты.
 type Server struct {
 	dbPool   *pgxpool.Pool
 	mart     *app.GopherMart
@@ -37,29 +39,35 @@ type Server struct {
 	sessions *midware.Sessions
 }
 
+// NewServer создает новый HTTP сервер с переданной параметром конфигурацией.
 func NewServer(cfg *conf.App) (srv *Server, err error) {
 	if cfg == nil {
 		panic("missing *conf.App, parameter must not be nil")
 	}
 	s := &Server{}
 
-	// ToDo конфигуратор?
 	ctx := context.Background()
+	log.Debug().Msgf("connecting to database")
 	s.dbPool, err = pgxpool.Connect(ctx, cfg.Database.URI)
 	if err != nil {
 		return nil, err
 	}
 
+	log.Debug().Msg("creating repository for service")
 	repo, err := postgre.NewPersist(ctx, s.dbPool)
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug().Msg("creating set of services")
 	svcAuth := auth.NewServiceWithDefaultCredMan(repo.Auth, user.NewService(repo.User))
 	svcOrder := order.NewService(cfg.AccrualSystemAddress, repo.Order)
 	svcBalance := balance.NewService(repo.Balance)
-	// app configuration
+
+	log.Debug().Msg("building application")
 	s.mart = app.NewGopherMart(svcAuth, svcOrder, svcBalance, svcBalance)
-	// router configuration
+
+	log.Debug().Msg("building router with sessions")
 	s.sessions = midware.NewDefaultSessions()
 	s.router = s.buildRouter(
 		handler.NewAuth(s.mart.Authenticator, s.sessions),
@@ -75,6 +83,7 @@ func NewServer(cfg *conf.App) (srv *Server, err error) {
 	return s, nil
 }
 
+// buildRouter создает роутер с набором middleware.
 func (s *Server) buildRouter(
 	auth *handler.Auth,
 	order *handler.Order,
@@ -89,10 +98,13 @@ func (s *Server) buildRouter(
 	r.Use(middleware.Compress(5))
 	r.Use(midware.Decompress)
 
+	log.Debug().Msg("registering auth handlers")
 	r.Group(func(r chi.Router) {
 		r.Post("/api/user/register", auth.RegisterUser)
 		r.Post("/api/user/login", auth.LoginUser)
 	})
+
+	log.Debug().Msg("registering use-case handlers")
 	r.Group(func(r chi.Router) {
 		r.Use(midware.SessionsCookie(s.sessions))
 		r.Post("/api/user/orders", order.UploadOrder)
@@ -104,6 +116,7 @@ func (s *Server) buildRouter(
 	return r
 }
 
+// Run стартует созданный сервер с graceful shutdown завершением.
 func (s *Server) Run() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

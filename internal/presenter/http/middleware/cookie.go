@@ -12,7 +12,6 @@ import (
 
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/utils"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -63,7 +62,6 @@ func getSessionTokenFromCookie(name string, r *http.Request) (token SessionToken
 	if err != nil {
 		return "", err
 	}
-	log.Debug().Msgf("getSessionTokenFromCookie: got cookie %s: %s", c.Name, c.Value)
 	cookie := GetSignedCookieFromVanilla(c)
 	err = cookie.DetachSign()
 	if err != nil {
@@ -113,7 +111,6 @@ func GetSignedCookieFromVanilla(cookie *http.Cookie) (sc SignedCookie) {
 
 func (sc *SignedCookie) AttachSign() {
 	sc.BaseValue = sc.Value
-	log.Debug().Msgf("AttachSign: cookie base value: %s", sc.BaseValue)
 	if len(sc.key) == 0 {
 		sc.RecalcKey()
 	}
@@ -144,7 +141,6 @@ func (sc *SignedCookie) DetachSign() (err error) {
 		return ErrSignedCookieInvalidValueOrUnsigned
 	}
 	sc.BaseValue = ss[0]
-	log.Debug().Msgf("DetachSign: cookie base value: %s", sc.BaseValue)
 	sc.RecalcKey()
 
 	sign := ss[1]

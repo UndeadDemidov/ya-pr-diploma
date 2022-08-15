@@ -20,11 +20,9 @@ type Repository interface {
 	ReadWithPassword(ctx context.Context, login, pword string) (usr user.User, err error)
 }
 
-var _ CredentialManager = (*Manager)(nil)
+// var _ CredentialManager = (*Manager)(nil)
 
-// Никакого хранения в памяти кредов не делаем. Чем меньше мест, где храняться логины/пароли,
-// тем меньше мест нужно защищать от хакеров - даже если это дополнительное место - память.
-// Имеет смысл кешировать столько с очень большой нагрузкой по аутентификации.
+// Manager управляет учетными записями пользователей.
 type Manager struct {
 	repo   Repository
 	hasher *SaltedHash
@@ -61,6 +59,7 @@ func (man *Manager) getHashedPassword(pword string) string {
 	return base64.URLEncoding.EncodeToString(man.hasher.Sum([]byte(pword)))
 }
 
+// SaltedHash является расширением hash.Hash с добавлением миксера с солью.
 type SaltedHash struct {
 	hash.Hash
 	salt  []byte

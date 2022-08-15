@@ -12,7 +12,6 @@ const (
 )
 
 var ErrConfigAccrualSysAddrNotSet = errors.New("accrual system address is not set")
-var _ Configurer = (*Externals)(nil)
 
 type Externals struct {
 	AccrualSystemAddress string

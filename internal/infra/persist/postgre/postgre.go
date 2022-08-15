@@ -3,8 +3,11 @@ package postgre
 import (
 	"context"
 	"embed"
+	"errors"
 
-	_ "github.com/golang-migrate/migrate/v4/database/pgx"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rs/zerolog/log"
 )
@@ -15,6 +18,8 @@ var fs embed.FS
 type Persist struct {
 	*User
 	*Auth
+	*Order
+	*Balance
 }
 
 func NewPersist(ctx context.Context, db *pgxpool.Pool) (*Persist, error) {
@@ -26,7 +31,10 @@ func NewPersist(ctx context.Context, db *pgxpool.Pool) (*Persist, error) {
 		return nil, err
 	}
 	// проверить что бд еще не создано и создать
-	log.Info().Msgf("successfully connected to PG server %s", db.Config().ConnConfig.Host)
+	log.Info().
+		Str("database", db.Config().ConnConfig.Database).
+		Str("host", db.Config().ConnConfig.Host).
+		Msg("successfully connected to PG")
 
 	err = migrateDB(db)
 	if err != nil {
@@ -34,53 +42,33 @@ func NewPersist(ctx context.Context, db *pgxpool.Pool) (*Persist, error) {
 	}
 
 	return &Persist{
-		User: NewUser(db),
-		Auth: NewAuth(db),
+		User:    NewUser(db),
+		Auth:    NewAuth(db),
+		Order:   NewOrder(db),
+		Balance: NewBalance(db),
 	}, nil
 }
 
 // migrateDB хотел сделать через golang-migrate/migrate - но только потерял время.
 // несовместимые connection string и нельзя конвертировать нативный постгресовый формат в uri
 func migrateDB(db *pgxpool.Pool) error {
-	script := `
-DROP TYPE IF EXISTS order_status;
-DROP TABLE IF EXISTS orders;
-DROP FUNCTION IF EXISTS trigger_set_timestamp;
-
-DROP TABLE IF EXISTS auth;
-DROP TABLE IF EXISTS users;
-
-CREATE TABLE users
-(
-    id         UUID                      NOT NULL
-        CONSTRAINT users_pk
-            PRIMARY KEY,
-    created_at timestamptz DEFAULT NOW() NOT NULL
-);
-
-CREATE TABLE auth
-(
-    id         UUID        DEFAULT gen_random_uuid() NOT NULL
-        CONSTRAINT auth_pk
-            PRIMARY KEY,
-    user_id    uuid                                  NOT NULL
-        CONSTRAINT auth_users_id_fk
-            REFERENCES users,
-    login      VARCHAR                               NOT NULL,
-    password   VARCHAR                               NOT NULL,
-    created_at timestamptz DEFAULT NOW()             NOT NULL
-);
-
-CREATE UNIQUE INDEX auth_login_uindex
-    ON auth (login);
-
-CREATE UNIQUE INDEX auth_user_id_uindex
-    ON auth (user_id);
-`
-	_, err := db.Exec(context.Background(), script)
+	d, err := iofs.New(fs, "migrations")
 	if err != nil {
 		return err
 	}
+
+	log.Debug().Msg("starting migrations")
+	m, err := migrate.NewWithSourceInstance("iofs", d, db.Config().ConnConfig.ConnString())
+	if err != nil {
+		return err
+	}
+
+	log.Debug().Msg("starting upgrades")
+	err = m.Up()
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return err
+	}
+
 	log.Info().Msg("DB is initialized successfully")
 	return nil
 }

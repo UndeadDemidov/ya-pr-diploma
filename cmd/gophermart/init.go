@@ -15,7 +15,7 @@ var cfg *conf.App
 
 func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).With().Caller().Logger()
 
 	cfg = conf.NewAppConfig()
 	cfg.SetPFlag()
@@ -23,7 +23,7 @@ func init() {
 	pflag.Parse()
 	err := viper.BindPFlags(pflag.CommandLine)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("can't bind argument flags %v", pflag.CommandLine)
+		log.Fatal().Err(err).Interface("flag", pflag.CommandLine).Msg("can't bind argument")
 	}
 
 	viper.AutomaticEnv()
@@ -33,7 +33,7 @@ func init() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't read config")
 	}
-	log.Info().Msgf("cfg: server addr is set to %v", cfg.RunAddress)
-	log.Info().Msgf("cfg: database uri is set to %v", cfg.URI)
-	log.Info().Msgf("cfg: accrual system addr is set to %v", cfg.AccrualSystemAddress)
+	log.Info().Str("address", cfg.RunAddress).Msg("cfg: server addr is set")
+	log.Info().Msg("cfg: database uri is set")
+	log.Info().Str("address", cfg.AccrualSystemAddress).Msg("cfg: accrual system addr is set")
 }

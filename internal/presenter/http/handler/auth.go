@@ -16,7 +16,7 @@ import (
 
 var (
 	// ToDo - заменить на нормальные ответы в json!
-	ErrInvalidContentType   = fmt.Errorf("set header value %v to %v", utils.ContentTypeKey, utils.ContentTypeJSON)
+	ErrInvalidContentType   = fmt.Errorf("set header key %v to proper value", utils.ContentTypeKey)
 	ErrProperJSONIsExpected = errors.New("proper JSON is expected, read task description carefully")
 )
 
@@ -45,7 +45,7 @@ func (a *Auth) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = a.auth.SignIn(r.Context(), req.Login, req.Password)
+	usr, err := a.auth.SignIn(r.Context(), req.Login, req.Password)
 	if err != nil {
 		if errors.Is(err, errors2.ErrLoginIsInUseAlready) {
 			utils.ServerError(w, errors2.ErrLoginIsInUseAlready, http.StatusConflict)
@@ -54,6 +54,10 @@ func (a *Auth) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		utils.InternalServerError(w, err)
 		return
 	}
+	// Можно было и JWT поюзать, но решил для практики поизобретать велосипеды в отпуске,
+	// чтобы не обнулиться в дно за месяц академа
+	cookie := middleware.NewSessionSignedCookie(a.sessions.AddNewSession(usr))
+	cookie.Set(w)
 	w.WriteHeader(http.StatusOK)
 }
 

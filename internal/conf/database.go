@@ -12,7 +12,6 @@ const (
 )
 
 var ErrConfigDatabaseURINotSet = errors.New("connection string for DB is not set")
-var _ Configurer = (*Database)(nil)
 
 type Database struct {
 	URI string

@@ -62,8 +62,7 @@ func getSessionTokenFromCookie(name string, r *http.Request) (token SessionToken
 	if err != nil {
 		return "", err
 	}
-	cookie := NewSessionSignedCookie("")
-	cookie.Cookie = c
+	cookie := GetSignedCookieFromVanilla(c)
 	err = cookie.DetachSign()
 	if err != nil {
 		return "", err
@@ -97,6 +96,16 @@ func NewSignedCookie(path, name, val string, maxAge int, saltStartIdx, saltEndId
 	}
 
 	sc.AttachSign()
+	return sc
+}
+
+func GetSignedCookieFromVanilla(cookie *http.Cookie) (sc SignedCookie) {
+	sc = SignedCookie{
+		Cookie:       cookie,
+		SaltStartIdx: saltStartIdx,
+		SaltEndIdx:   saltEndIdx,
+	}
+
 	return sc
 }
 

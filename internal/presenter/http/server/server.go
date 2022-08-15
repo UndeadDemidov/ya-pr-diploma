@@ -11,6 +11,8 @@ import (
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/app"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/conf"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/auth"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/balance"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/order"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/infra/persist/postgre"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/handler"
@@ -21,6 +23,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Closer - контракт для вызова graceful завершения фоновых процессов.
+type Closer interface {
+	Close()
+}
+
+// var _ Closer = (*app.GopherMart)(nil)
+
+// Server - HTTP сервер реализующий начисление баллов за сделанные заказы и использование их для оплаты.
 type Server struct {
 	dbPool   *pgxpool.Pool
 	mart     *app.GopherMart
@@ -29,30 +39,41 @@ type Server struct {
 	sessions *midware.Sessions
 }
 
+// NewServer создает новый HTTP сервер с переданной параметром конфигурацией.
 func NewServer(cfg *conf.App) (srv *Server, err error) {
 	if cfg == nil {
 		panic("missing *conf.App, parameter must not be nil")
 	}
 	s := &Server{}
 
-	// ToDo конфигуратор?
 	ctx := context.Background()
+	log.Debug().Msgf("connecting to database")
 	s.dbPool, err = pgxpool.Connect(ctx, cfg.Database.URI)
 	if err != nil {
 		return nil, err
 	}
 
+	log.Debug().Msg("creating repository for service")
 	repo, err := postgre.NewPersist(ctx, s.dbPool)
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug().Msg("creating set of services")
 	svcAuth := auth.NewServiceWithDefaultCredMan(repo.Auth, user.NewService(repo.User))
-	// app configuration
-	s.mart = app.NewGopherMart(svcAuth)
-	// router configuration
+	svcOrder := order.NewService(cfg.AccrualSystemAddress, repo.Order)
+	svcBalance := balance.NewService(repo.Balance)
+
+	log.Debug().Msg("building application")
+	s.mart = app.NewGopherMart(svcAuth, svcOrder, svcBalance, svcBalance)
+
+	log.Debug().Msg("building router with sessions")
 	s.sessions = midware.NewDefaultSessions()
 	s.router = s.buildRouter(
-		handler.NewAuth(s.mart, s.sessions),
+		handler.NewAuth(s.mart.Authenticator, s.sessions),
+		handler.NewOrder(s.mart.OrderProcessor),
+		handler.NewBalance(s.mart.BalanceGetter),
+		handler.NewWithdrawal(s.mart.WithdrawalProcessor),
 	)
 
 	s.srv = &http.Server{
@@ -62,7 +83,13 @@ func NewServer(cfg *conf.App) (srv *Server, err error) {
 	return s, nil
 }
 
-func (s *Server) buildRouter(auth *handler.Auth) *chi.Mux {
+// buildRouter создает роутер с набором middleware.
+func (s *Server) buildRouter(
+	auth *handler.Auth,
+	order *handler.Order,
+	bal *handler.Balance,
+	wtdrwl *handler.Withdrawal,
+) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -71,16 +98,25 @@ func (s *Server) buildRouter(auth *handler.Auth) *chi.Mux {
 	r.Use(middleware.Compress(5))
 	r.Use(midware.Decompress)
 
+	log.Debug().Msg("registering auth handlers")
 	r.Group(func(r chi.Router) {
 		r.Post("/api/user/register", auth.RegisterUser)
 		r.Post("/api/user/login", auth.LoginUser)
 	})
+
+	log.Debug().Msg("registering use-case handlers")
 	r.Group(func(r chi.Router) {
 		r.Use(midware.SessionsCookie(s.sessions))
+		r.Post("/api/user/orders", order.UploadOrder)
+		r.Get("/api/user/orders", order.DownloadOrders)
+		r.Get("/api/user/balance", bal.Get)
+		r.Post("/api/user/balance/withdraw", wtdrwl.CashOut)
+		r.Get("/api/user/withdrawals", wtdrwl.History)
 	})
 	return r
 }
 
+// Run стартует созданный сервер с graceful shutdown завершением.
 func (s *Server) Run() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -97,6 +133,7 @@ func (s *Server) Run() {
 	log.Info().Msg("Server stopped")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer func() {
+		s.mart.Close()
 		s.dbPool.Close()
 		log.Info().Msg("Everything is closed properly")
 		cancel()

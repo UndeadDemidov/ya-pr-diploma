@@ -7,10 +7,9 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	mock "github.com/UndeadDemidov/ya-pr-diploma/internal/app/mocks"
-	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/entity"
+	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/balance"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/domains/user"
 	errors2 "github.com/UndeadDemidov/ya-pr-diploma/internal/errors"
 	"github.com/UndeadDemidov/ya-pr-diploma/internal/presenter/http/middleware"
@@ -158,6 +157,7 @@ func TestWithdrawal_CashOut(t *testing.T) {
 			ctx := context.WithValue(request.Context(), middleware.ContextUserIDKey, tt.args.reference)
 			wtdrwl.CashOut(w, request.WithContext(ctx))
 			result := w.Result()
+			defer result.Body.Close()
 			require.Equal(t, tt.want, result.StatusCode)
 		})
 	}
@@ -165,11 +165,11 @@ func TestWithdrawal_CashOut(t *testing.T) {
 
 func TestWithdrawal_History(t *testing.T) {
 	type fields struct {
-		wtdrwls   []entity.Withdrawal
+		wtdrwls   []balance.Withdrawal
 		processor *mock.MockWithdrawalProcessor
 	}
 	type args struct {
-		wtdrwls   []entity.Withdrawal
+		wtdrwls   []balance.Withdrawal
 		json      string
 		reference string
 	}
@@ -211,7 +211,7 @@ func TestWithdrawal_History(t *testing.T) {
 				)
 			},
 			args: args{
-				wtdrwls:   make([]entity.Withdrawal, 0),
+				wtdrwls:   make([]balance.Withdrawal, 0),
 				json:      "",
 				reference: "1",
 			},
@@ -225,19 +225,11 @@ func TestWithdrawal_History(t *testing.T) {
 				)
 			},
 			args: args{
-				wtdrwls: []entity.Withdrawal{
+				wtdrwls: []balance.Withdrawal{
 					{
-						ID:   "1",
-						User: user.User{ID: "1"},
-						Order: entity.Order{
-							ID:        "1",
-							User:      user.User{ID: "1"},
-							Number:    2377225624,
-							Status:    entity.Processed,
-							Accrual:   200,
-							Unloaded:  time.Time{},
-							Processed: time.Time{},
-						},
+						ID:        "1",
+						User:      user.User{ID: "1"},
+						Order:     2377225624,
 						Sum:       50000,
 						Processed: utils.TimeRFC3339ParseHelper("2020-12-09T16:09:57+03:00"),
 					},
@@ -278,6 +270,7 @@ func TestWithdrawal_History(t *testing.T) {
 			ctx := context.WithValue(request.Context(), middleware.ContextUserIDKey, tt.args.reference)
 			ord.History(w, request.WithContext(ctx))
 			result := w.Result()
+			defer result.Body.Close()
 			require.Equal(t, tt.want, result.StatusCode)
 			if result.StatusCode == http.StatusOK {
 				b, _ := io.ReadAll(result.Body)

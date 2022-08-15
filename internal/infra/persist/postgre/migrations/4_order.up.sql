@@ -6,11 +6,11 @@ CREATE TABLE orders
         CONSTRAINT orders_pk
             PRIMARY KEY,
     user_id      uuid                                   NOT NULL
-        CONSTRAINT auth_users_id_fk
+        CONSTRAINT orders_users_id_fk
             REFERENCES users,
-    number       VARCHAR                                NOT NULL,
+    number       BIGINT                                 NOT NULL,
     status       order_status DEFAULT 'NEW'             NOT NULL,
-    accrual      INTEGER      DEFAULT 0,
+    accrual      INTEGER      DEFAULT 0 				NOT NULL,
     uploaded_at  timestamptz  DEFAULT NOW()             NOT NULL,
     processed_at timestamptz  DEFAULT NOW()             NOT NULL
 );
@@ -33,3 +33,25 @@ CREATE TRIGGER set_timestamp
     ON orders
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
+
+CREATE OR REPLACE FUNCTION update_accrual()
+    RETURNS TRIGGER AS
+$$
+BEGIN
+    UPDATE users as u
+    SET accrual = u.accrual + (NEW.accrual - OLD.accrual),
+        balance = u.balance + (NEW.accrual - OLD.accrual),
+        updated_at = now()
+    WHERE u.id = NEW.user_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_after_update_orders
+    AFTER UPDATE
+    ON orders
+    FOR EACH ROW
+    WHEN (OLD.status IS DISTINCT FROM NEW.status
+        AND NEW.status = 'PROCESSED'
+        AND OLD.accrual IS DISTINCT FROM NEW.accrual)
+EXECUTE PROCEDURE update_accrual();

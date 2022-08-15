@@ -1,0 +1,2 @@
+#!/bin/zsh
+./accrual_darwin_amd64 --d "postgres://postgres:postgres@localhost:5432/ya_pract?sslmode=disable" --a :8082
